@@ -1,0 +1,3 @@
+/*! For license information please see app.js.LICENSE.txt */
+!function(e,t){"object"==typeof exports&&"object"==typeof module?module.exports=t():"function"==typeof define&&define.amd?define([],t):"object"==typeof exports?exports.mini=t():e.mini=t()}(this,(function(){return(this.webpackChunkmini=this.webpackChunkmini||[]).push([["app"],{193:(e,t,i)=>{"use strict";i.r(t)},672:(e,t,i)=>{"use strict";i.r(t);i(193)}},e=>{"use strict";var t,i=(t=672,e(e.s=t));return i=i.default}])}));
+//# sourceMappingURL=app.js.map

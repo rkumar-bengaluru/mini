@@ -1,0 +1,65 @@
+{
+  "name": "mini",
+  "version": "1.0.0",
+  "description": "lightweight search engine for websites",
+  "main": "index.html",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "http-server",
+    "build": "webpack "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rkumar-bengaluru/mini.git"
+  },
+  "author": "Rupak Kumar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rkumar-bengaluru/mini/issues"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
+      "\\.(css|less)$": "<rootDir>/__mocks__/styleMock.js"
+    },
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/"
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html"
+    ]
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.14.3",
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^27.0.2",
+    "babel-loader": "^8.2.2",
+    "babel-preset-es2015": "^6.24.1",
+    "copy-webpack-plugin": "^8.1.1",
+    "css-loader": "^5.2.6",
+    "css-minimizer-webpack-plugin": "^3.0.0",
+    "html-minimizer-webpack-plugin": "^3.1.0",
+    "http-server": "^0.12.3",
+    "jest": "^27.0.3",
+    "jest-cli": "^27.0.3",
+    "sass": "^1.34.0",
+    "sass-loader": "^11.1.1",
+    "style-loader": "^2.0.0",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.0"
+  },
+  "homepage": "https://github.com/rkumar-bengaluru/mini#readme",
+  "dependencies": {
+    "app-root-path": "^3.0.0",
+    "babel-preset-env": "^1.7.0",
+    "extract-text-webpack-plugin": "^3.0.2",
+    "html-webpack-plugin": "^5.3.1",
+    "mini-css-extract-plugin": "^1.6.0"
+  }
+}
