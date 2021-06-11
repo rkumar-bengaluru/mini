@@ -1,7 +1,5 @@
 
 const inquirer = require('inquirer');
-const fetch = require('node-fetch');
-
 
 module.exports = {
     askUrlToIndex: () => {

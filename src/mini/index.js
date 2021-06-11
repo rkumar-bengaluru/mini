@@ -13,11 +13,11 @@ console.log(
 );
 
 const run = async () => {
-    
-    const url = await _mini.askUrlToIndex();
-    console.log('url to index - ' + JSON.stringify(url));
-    var user = new MiNi(url.url);
-    user.load();
+    //const url = await _mini.askUrlToIndex();
+    const url = 'https://www.vlocalshop.in';
+    //console.log('url to index - ' + JSON.stringify(url));
+    var mini = new MiNi(url);
+    mini.load();
 };
 
 run();
