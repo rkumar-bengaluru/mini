@@ -14,10 +14,12 @@ console.log(
 
 const run = async () => {
     //const url = await _mini.askUrlToIndex();
-    const url = 'https://prokicksports.com/sitemap_products_1.xml?from=3007608946769&to=6585087262801';
+    const url = 'https://www.vlocalshop.in/sitemap.xml';
     //console.log('url to index - ' + JSON.stringify(url));
     var mini = new MiNi(url);
-    mini.load();
+    //mini.createLunrIndex('vlocalshop/vlocalshop.json','vlocalshop');
+    let result = mini.search("grocery");
+    console.log(result);
 };
 
 run();

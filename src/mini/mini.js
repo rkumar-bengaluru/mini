@@ -3,6 +3,11 @@ const fetch = require('node-fetch');
 const Sitemapper = require('sitemapper');
 var fs = require('fs');
 const path = require('path');
+const jsdom = require("jsdom");
+const { JSDOM } = jsdom;
+const cliProgress = require('cli-progress');
+const lunr = require("lunr");
+const { isDebugEnabled } = require('./logger/logger');
 
 class MiNi {
 
@@ -18,10 +23,12 @@ class MiNi {
             this.siteFolder = tmp[1]
         else
             throw new Error('invalid url');
-        this.sitemapFileName = this.siteFolder + '/' + 'sitemap.json'
+        this.sitemapFileName = this.siteFolder + '/' + this.siteFolder + '.json'
         this.allpages = [];
         this.curPageIndex = -1;
-        this.politePolicyInterval = 5000;// 5 seconds interval to load pages.
+        this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
+        this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+        this.pagesFolder = this.folder + "/pages";
     }
 
     get folder() {
@@ -37,6 +44,10 @@ class MiNi {
             if (!fs.existsSync(this.folder)) {
                 fs.mkdirSync(this.folder);
                 logger.debug('MiNi::load:: site folder created ' + this.folder);
+            }
+            if (!fs.existsSync(this.pagesFolder)) {
+                fs.mkdirSync(this.pagesFolder);
+                logger.debug('MiNi::load:: site folder created ' + this.pagesFolder);
             }
         } catch (e) {
             throw e;
@@ -55,7 +66,7 @@ class MiNi {
                 var pages = sites.sites;
                 logger.debug('no of pages =' + pages.length);
                 pages.forEach(page => {
-                    allpages.push(page);
+                    allpages.push({ "id": page, "title": "", "keywords": "", "description": "" });
                 });
                 fs.writeFileSync(temp, JSON.stringify(allpages));
                 logger.debug('sitemap written to local fs ' + temp);
@@ -68,7 +79,7 @@ class MiNi {
 
     fetchPage(page) {
         return new Promise((resolve, reject) => {
-            var pageName = this.folder + '/';
+            var pageName = this.pagesFolder + '/';
             if (page === this.homepage || (page === this.homepage + '/')) {
                 pageName += this.folder;
             } else {
@@ -79,6 +90,7 @@ class MiNi {
             logger.debug('loading page...' + pageName);
             fetch(page).then(res => res.text()).then(body => {
                 fs.writeFileSync(pageName, body);
+                this.prepareindexdata(pageName);
             });
             resolve(pageName);
         });
@@ -86,72 +98,88 @@ class MiNi {
 
     advancePageFetch = async () => {
         ++this.curPageIndex;
+        this.pbar.update(this.curPageIndex);
         if (this.curPageIndex >= this.allpages.length) {
-            this.curPageIndex = 0;
+            this.pbar.stop();
+            return;
         }
-        let pagedownloaded = await this.fetchPage(this.allpages[this.curPageIndex]);   // set new news item into the ticker
+        let pagedownloaded = await this.fetchPage(this.allpages[this.curPageIndex].id);   // set new news item into the ticker
         logger.debug('page load over...' + pagedownloaded);
     }
 
     startIndexing = async () => {
         logger.debug('fetching sitemap')
         this.allpages = await this.fetchSiteMap();
+        this.pbar.start(this.allpages.length, 0);
         logger.debug('sitemap fetched with size ... ' + this.allpages.length)
-        var intervalID = setInterval(this.advancePageFetch, this.politePolicyInterval);
-        // for (var i = 0; i < this.allpages.length; i++) {
-        //     var page = this.allpages[i];
-        //     setTimeout(function () {
-        //         logger.debug('loading page ' + page);
-        //     }, 5000);
-
-        //     //let pagedownloaded = await this.fetchPage(this.allpages[i]);
-        //     //logger.debug('page load over...' + pagedownloaded);
-        // }
+        setInterval(this.advancePageFetch, this.politePolicyInterval);
     }
 
-
-
-    // loadpage() {
-    //     fetch('https://www.vlocalshop.in/product/Y0C38CGPRA')
-    //         .then(res => res.text())
-    //         .then(body => {
-    //             fs.writeFileSync("programming.txt", data);
-    //             fs.writeFile('vlocalshop/' + 'Y0C38CGPRA.html', body, (err) => {
-    //                 if (err) throw err;
-    //                 console.log('Data written to file');
-    //             });
-    //         });
-    // }
-
-    load() {
+    loadsite() {
         logger.debug('MiNi::load::url to load ' + this.sitemap);
         this.createSiteFolder();
-        //this.fetchSiteMap();
         this.startIndexing();
+    }
 
-        // sitemap.fetch(this.sitemap).then(function (sites) {
-        //     var url = sites.url;
-        //     var site = url.split('/')[2];
-        //     var siteFolder = site.split('.');
-        //     logger.debug('site=' + siteFolder.length);
-        //     if (siteFolder.length == 2)
-        //         logger.debug('site=' + site + ',siteFolder=' + siteFolder[0]);
-        //     else if (siteFolder.length == 3)
-        //         logger.debug('site=' + site + ',siteFolder=' + siteFolder[1]);
+    prepareindexdata(pageName) {
+        try {
+            JSDOM.fromFile(pageName, {}).then(dom => {
+                this.allpages[this.curPageIndex].title = dom.window.document.querySelector("title").textContent;
+                this.allpages[this.curPageIndex].description = dom.window.document.head.querySelector("[name=\"description\"]").content;
+                this.allpages[this.curPageIndex].keywords = dom.window.document.head.querySelector("[name=\"keywords\"]").content;
+                fs.writeFileSync(this.sitemapFileName, JSON.stringify(this.allpages));
+            });
+        } catch (e) {
+            logger.debug(e.stack);
+            throw e;
+        }
+    }
 
+    createLunrIndex(fileName, siteName) {
+        fs.readFile(fileName, (err, data) => {
+            if (err) {
+                console.log('error reading file - ' + fileName);
+                console.log(err.stack);
+            }
+            var products = JSON.parse(data);
+            console.log('products size -' + products.length);
+            try {
+                var idx = lunr(function () {
+                    this.ref('id')
+                    this.field("title")
 
-        // var allpages = sites.sites;
-        // logger.debug('no of pages =' + allpages.length);
-        // allpages.forEach(page => {
-        //     var opage = page;
-        //     var pageName = siteFolder + '/' + opage.split('/')[4] + ".html";
-        //     logger.debug('site page ' + pageName);
-        //     fetch(page)
-        //         .then(res => res.text()).then(body => {
-        //             fs.writeFileSync(pageName, body);
-        //         });
-        // });
-        //});
+                    for (let i = 0; i < products.length; i++) {
+                        this.add(products[i])
+                    }
+                });
+                var serializedIdx = JSON.stringify(idx);
+                fs.writeFile(siteName + '-index.json', serializedIdx, (err) => {
+                    if (err) throw err;
+                    console.log('index written to file');
+                });
+            } catch (e) {
+                console.log(e.stack);
+                throw e;
+            }
+        });
+    }
+
+    loadindex() {
+        var data = fs.readFileSync('vlocalshop-index.json');
+        var idx = lunr.Index.load(JSON.parse(data));
+        return idx;
+    }
+
+    search(query) {
+        try {
+            let idx = this.loadindex();
+            logger.debug('loaded index file.' + idx);
+            var result = idx.search(query);
+            return result;
+        } catch (e) {
+            console.log(e.stack);
+            throw e;
+        }
     }
 }
 
