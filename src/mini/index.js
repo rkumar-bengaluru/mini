@@ -16,8 +16,9 @@ const run = async () => {
     //const url = await _mini.askUrlToIndex();
     const url = 'https://www.vlocalshop.in/sitemap.xml';
     //console.log('url to index - ' + JSON.stringify(url));
-    var mini = new MiNi(url);
+    //var mini = new MiNi(url);
     //mini.createLunrIndex('vlocalshop/vlocalshop.json','vlocalshop');
+    var mini = new MiNi();
     let result = mini.search("grocery");
     console.log(result);
 };

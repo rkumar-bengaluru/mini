@@ -12,23 +12,27 @@ const { isDebugEnabled } = require('./logger/logger');
 class MiNi {
 
     constructor(_sitemap) {
-        this.sitemap = _sitemap;
-        this.sitemapspl = this.sitemap.split('/');
-        this.siteName = this.sitemapspl[2];
-        this.homepage = this.sitemapspl[0] + '/' + this.sitemapspl[1] + '/' + this.sitemapspl[2];
-        var tmp = this.siteName.split('.');
-        if (tmp.length == 2)
-            this.siteFolder = tmp[0]
-        else if (tmp.length == 3)
-            this.siteFolder = tmp[1]
-        else
-            throw new Error('invalid url');
-        this.sitemapFileName = this.siteFolder + '/' + this.siteFolder + '.json'
-        this.allpages = [];
-        this.curPageIndex = -1;
-        this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
-        this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-        this.pagesFolder = this.folder + "/pages";
+        if (_sitemap) {
+            this.sitemap = _sitemap;
+            this.sitemapspl = this.sitemap.split('/');
+            this.siteName = this.sitemapspl[2];
+            this.homepage = this.sitemapspl[0] + '/' + this.sitemapspl[1] + '/' + this.sitemapspl[2];
+            var tmp = this.siteName.split('.');
+            if (tmp.length == 2)
+                this.siteFolder = tmp[0]
+            else if (tmp.length == 3)
+                this.siteFolder = tmp[1]
+            else
+                throw new Error('invalid url');
+            this.sitemapFileName = this.siteFolder + '/' + this.siteFolder + '.json'
+            this.allpages = [];
+            this.curPageIndex = -1;
+            this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
+            this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+            this.pagesFolder = this.folder + "/pages";
+        }
+        this.siteIdxFile = 'index/vlocalshop-index.json';
+        this.idx = this.loadindex();
     }
 
     get folder() {
@@ -165,16 +169,14 @@ class MiNi {
     }
 
     loadindex() {
-        var data = fs.readFileSync('vlocalshop-index.json');
+        var data = fs.readFileSync(this.siteIdxFile);
         var idx = lunr.Index.load(JSON.parse(data));
         return idx;
     }
 
     search(query) {
         try {
-            let idx = this.loadindex();
-            logger.debug('loaded index file.' + idx);
-            var result = idx.search(query);
+            var result = this.idx.search(query);
             return result;
         } catch (e) {
             console.log(e.stack);
