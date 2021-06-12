@@ -20,7 +20,8 @@ class MiNi {
             throw new Error('invalid url');
         this.sitemapFileName = this.siteFolder + '/' + 'sitemap.json'
         this.allpages = [];
-
+        this.curPageIndex = -1;
+        this.politePolicyInterval = 5000;// 5 seconds interval to load pages.
     }
 
     get folder() {
@@ -75,7 +76,7 @@ class MiNi {
                 pageName += tmp[tmp.length - 1];
             }
             pageName += ".html"
-            logger.debug('page to load...' + pageName);
+            logger.debug('loading page...' + pageName);
             fetch(page).then(res => res.text()).then(body => {
                 fs.writeFileSync(pageName, body);
             });
@@ -83,40 +84,44 @@ class MiNi {
         });
     }
 
-    loadPage = async (page) => {
-
-
+    advancePageFetch = async () => {
+        ++this.curPageIndex;
+        if (this.curPageIndex >= this.allpages.length) {
+            this.curPageIndex = 0;
+        }
+        let pagedownloaded = await this.fetchPage(this.allpages[this.curPageIndex]);   // set new news item into the ticker
+        logger.debug('page load over...' + pagedownloaded);
     }
 
     startIndexing = async () => {
         logger.debug('fetching sitemap')
         this.allpages = await this.fetchSiteMap();
         logger.debug('sitemap fetched with size ... ' + this.allpages.length)
-        logger.debug('starting loading pages...');
-        for (var i = 0; i < this.allpages.length; i++) {
-            var page = this.allpages[i];
-            setTimeout(function () {
-                logger.debug('loading page ' + page);
-            }, 5000);
+        var intervalID = setInterval(this.advancePageFetch, this.politePolicyInterval);
+        // for (var i = 0; i < this.allpages.length; i++) {
+        //     var page = this.allpages[i];
+        //     setTimeout(function () {
+        //         logger.debug('loading page ' + page);
+        //     }, 5000);
 
-            //let pagedownloaded = await this.fetchPage(this.allpages[i]);
-            //logger.debug('page load over...' + pagedownloaded);
-        }
+        //     //let pagedownloaded = await this.fetchPage(this.allpages[i]);
+        //     //logger.debug('page load over...' + pagedownloaded);
+        // }
     }
 
 
 
-    loadpage() {
-        fetch('https://www.vlocalshop.in/product/Y0C38CGPRA')
-            .then(res => res.text())
-            .then(body => {
-                fs.writeFileSync("programming.txt", data);
-                fs.writeFile('vlocalshop/' + 'Y0C38CGPRA.html', body, (err) => {
-                    if (err) throw err;
-                    console.log('Data written to file');
-                });
-            });
-    }
+    // loadpage() {
+    //     fetch('https://www.vlocalshop.in/product/Y0C38CGPRA')
+    //         .then(res => res.text())
+    //         .then(body => {
+    //             fs.writeFileSync("programming.txt", data);
+    //             fs.writeFile('vlocalshop/' + 'Y0C38CGPRA.html', body, (err) => {
+    //                 if (err) throw err;
+    //                 console.log('Data written to file');
+    //             });
+    //         });
+    // }
 
     load() {
         logger.debug('MiNi::load::url to load ' + this.sitemap);
