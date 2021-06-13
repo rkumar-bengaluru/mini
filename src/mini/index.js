@@ -19,7 +19,7 @@ const run = async () => {
     //var mini = new MiNi(url);
     //mini.createLunrIndex('vlocalshop/vlocalshop.json','vlocalshop');
     var mini = new MiNi();
-    let result = mini.search("apacs ziggler");
+    let result = mini.search("everlast");
     console.log(result);
 };
 
