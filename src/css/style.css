@@ -85,6 +85,14 @@ section {
     margin-top: 168px;
 }
 
+.mini-search-result-section {
+    margin-top: 38px;
+}
+
+.mini-search-results-section {
+    margin-top: 3px;
+}
+
 .mini_logo {
     display:block;
     margin: 0 auto 27px;
@@ -92,10 +100,51 @@ section {
     width: 272px;
 }
 
+.mini_logo_small {
+    display:block;
+    margin: 0 0 27px 27px;
+    height: 42px;
+    width: 122px;
+}
+
+
 .search-btns {
     margin: 0 auto 17px;
     width: 586px;
 }
+
+.mini-search-btns {
+    
+    width: 249px;
+}
+
+.mini-btns-centered {
+    text-align: center;
+    margin-top: 5px;
+}
+
+#mini-btn-search {
+    border :rgb(51, 51, 51);
+}
+
+.mini-search-bar {
+    margin-left: 6px;
+    margin-top: -1px;
+    margin-bottom: 7px;
+    height: 46px;
+    width: 100%;
+    border-radius: 2px;
+    border: 1px solid #bbb8b8;
+    border-top-color: #bbb8b8;
+    border-bottom-color: rgba(194, 192, 192, .9);
+    box-shadow: 0 3px 2px -2px rgba(209, 209, 209, 0.95);
+}
+
+.mini-search-bar:hover {
+    border-bottom-color: rgba(194, 192, 192, 1);
+    box-shadow: 0 3px 8px -1px rgba(209, 209, 209, 1);
+}
+
 
 .search_bar {
     margin-left: 6px;
@@ -168,6 +217,8 @@ button:hover {
     padding: 0 16px 0 17px;
 }
 
+
+
 #btn_lucky {
     outline: none;
     margin-left: 2px;
@@ -175,7 +226,7 @@ button:hover {
 }
 
 .content {
-    flex: 1 0 auto;
+    flex: 1 1 auto;
 }
 
 .bottom_footer {
@@ -235,4 +286,27 @@ footer {
     text-decoration: underline;
     color: rgb(51, 51, 51);
     background-color: transparent;
+}
+
+
+.mini-result-row {
+    margin-left: 100px;
+    height: 46px;
+    width:100%;
+}
+
+.mini-result-src {
+    color: #777;
+    font-size: 13px;
+}
+
+.mini-result-title {
+    color: blue;
+    font-size: 18px;
+}
+
+.mini-result-desc {
+    color: #777;
+    width: 75%;
+    overflow: auto;
 }
