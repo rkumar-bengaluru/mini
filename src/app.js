@@ -3,7 +3,7 @@ import MiNiWeb from './mini/miniweb';
 
 let mini = new MiNiWeb();
 var mini_head = '<div class=\"row\">';
-mini_head += '<div class=\"column\"><a href=\'/\'><img src=\"images/mini.svg\" alt=\"Mini\" class=\"mini_logo_small\"></a></div>';
+mini_head += '<div class=\"column\"><a href=\'/mini\'><img src=\"images/mini.svg\" alt=\"Mini\" class=\"mini_logo_small\"></a></div>';
 mini_head += '<div class=\"column\"><div class=\"search-btns\"><div class=\"mini-search-bar\"><input id=\'mini-search-input\' type=\"text\" autofocus>';
 mini_head += '<div class=\"mic_space\"> <img src=\"images/m-mic.png\" alt=\"Mic\" class=\"mic_icon\"> </div>';
 mini_head += '</div></div></div>';
