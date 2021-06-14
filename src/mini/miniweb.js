@@ -21,6 +21,8 @@ export default class MiNiWeb {
             var result = this.idx.search(query);
             console.log('response length from mini -' + result.length);
             var best10 = [];
+            if (result.length === 0)
+                return best10;
             for (var i = 0; i < 10; i++)
                 best10.push(result[i]);
             return best10;

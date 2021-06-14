@@ -309,3 +309,7 @@ footer {
     width: 75%;
     overflow: auto;
 }
+
+.mini-error {
+    color: rgb(231, 23, 23);
+}

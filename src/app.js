@@ -8,7 +8,7 @@ mini_head += '<div class=\"column\"><div class=\"search-btns\"><div class=\"mini
 mini_head += '<div class=\"mic_space\"> <img src=\"images/m-mic.png\" alt=\"Mic\" class=\"mic_icon\"> </div>';
 mini_head += '</div></div></div>';
 mini_head += '<div class=\"column\"><div class=\"mini-search-btns\"><div class=\"mini-btns-centered\">';
-mini_head += '<button id=\"mini-btn-search\" >Mini Search</button>';
+mini_head += '<button id=\"mini-btn-search\" >Mini Search</button><br><span class=\"mini-error btns_centered\" id=\'error\'></span>';
 mini_head += ' </div></div></div>';
 mini_head += '</div>';
 
@@ -21,10 +21,12 @@ function performsearch() {
         return;
     }
     document.getElementById('mini-head').innerHTML = mini_head;
-    
+
     document.getElementById('mini-search-input').value = query;
     console.log('search query...' + query);
     let result = mini.search(query);
+    console.log('response size...' + result.length);
+
     var response = '';
     result.forEach(function (r) {
         if (typeof r !== 'undefined') {
@@ -40,7 +42,14 @@ function performsearch() {
             response += '</div></div></div>';
         }
     });
-    document.getElementById('mini-results').innerHTML = response;
+    if (result.length === 0) {
+        console.log('no data' + result.length);
+        document.getElementById('mini-results').innerHTML = '<span class=\"mini-error\">Sorry no results matching your criteria...</span>';
+
+    } else {
+        console.log('no of results ' + result.length);
+        document.getElementById('mini-results').innerHTML = response;
+    }
     init();
 }
 
@@ -52,7 +61,9 @@ function init() {
                 console.log('enter clicked...');
                 event.preventDefault();
                 performsearch();
+                return;
             }
+            document.getElementById('error').innerHTML = '';
         })
         document.getElementById('mini-btn-search').addEventListener('click', () => {
             performsearch();
