@@ -107,6 +107,12 @@ section {
     width: 122px;
 }
 
+.mini-results-response-time {
+    font-size: 16px;
+    margin: 0 0 27px 27px;
+    color: rgb(185, 174, 174);
+}
+
 
 .search-btns {
     margin: 0 auto 17px;

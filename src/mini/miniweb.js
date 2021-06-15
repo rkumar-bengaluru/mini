@@ -17,15 +17,18 @@ export default class MiNiWeb {
 
     search(query) {
         try {
+            var t1 = Math.round(Date.now() );
             console.log('query from mini -' + query);
             var result = this.idx.search(query);
-            console.log('response length from mini -' + result.length);
             var best10 = [];
-            if (result.length === 0)
-                return best10;
             for (var i = 0; i < 10; i++)
                 best10.push(result[i]);
-            return best10;
+            var t2 = Math.round(Date.now());
+            var diff = ((t2-t1)/1000).toFixed(3);
+            console.log('response length from mini -' + result.length + ',diff-' + diff);
+            var response = { 'total': result.length, 'time': diff, 'bestCount': 10, 'best': best10 }
+
+            return response;
         } catch (e) {
             console.log(e.stack);
             throw e;

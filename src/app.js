@@ -11,6 +11,7 @@ mini_head += '<div class=\"column\"><div class=\"mini-search-btns\"><div class=\
 mini_head += '<button id=\"mini-btn-search\" >Mini Search</button><br><span class=\"mini-error btns_centered\" id=\'error\'></span>';
 mini_head += ' </div></div></div>';
 mini_head += '</div>';
+mini_head += '<div id=\'mini-results-response-time\' class=\'mini-results-response-time\'></div>';
 
 function performsearch() {
     document.getElementById('error').innerHTML = '';
@@ -26,9 +27,11 @@ function performsearch() {
     console.log('search query...' + query);
     let result = mini.search(query);
     console.log('response size...' + result.length);
-
+    var rtime = 'About ' + result.total + ' resuls in ' + result.time + ' seconds,filtered best ' + result.bestCount + ' below...'
+    console.log('rtime->' + rtime);
+    document.getElementById('mini-results-response-time').innerHTML  = rtime;
     var response = '';
-    result.forEach(function (r) {
+    result.best.forEach(function (r) {
         if (typeof r !== 'undefined') {
             response += '<div class=\"mini-result-row\"><div class=\"row\"><div class=\'column\'>';
             response += '<div class=\"mini-result-src\"><a target=\'_blank\'href=\'' + r.ref + '\'>' + r.ref + '</a></div>';
@@ -42,12 +45,12 @@ function performsearch() {
             response += '</div></div></div>';
         }
     });
-    if (result.length === 0) {
-        console.log('no data' + result.length);
+    if (result.total === 0) {
+        console.log('no data' + result.total);
         document.getElementById('mini-results').innerHTML = '<span class=\"mini-error\">Sorry no results matching your criteria...</span>';
 
     } else {
-        console.log('no of results ' + result.length);
+        console.log('no of results ' + result.total);
         document.getElementById('mini-results').innerHTML = response;
     }
     init();
