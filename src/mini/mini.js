@@ -11,28 +11,35 @@ const { isDebugEnabled } = require('./logger/logger');
 
 class MiNi {
 
-    constructor(_sitemap) {
-        if (_sitemap) {
-            this.sitemap = _sitemap;
-            this.sitemapspl = this.sitemap.split('/');
-            this.siteName = this.sitemapspl[2];
-            this.homepage = this.sitemapspl[0] + '/' + this.sitemapspl[1] + '/' + this.sitemapspl[2];
-            var tmp = this.siteName.split('.');
-            if (tmp.length == 2)
-                this.siteFolder = tmp[0]
-            else if (tmp.length == 3)
-                this.siteFolder = tmp[1]
-            else
-                throw new Error('invalid url');
-            this.sitemapFileName = this.siteFolder + '/' + this.siteFolder + '.json'
-            this.allpages = [];
-            this.curPageIndex = -1;
-            this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
-            this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-            this.pagesFolder = this.folder + "/pages";
+    constructor(options) {
+        if (options) {
+            var opt = JSON.parse(JSON.stringify(options));
+            if (options.sitemap) {
+                logger.debug('url to fetch ' + opt.sitemap);
+                this.sitemap = options.sitemap;
+                this.sitemapspl = this.sitemap.split('/');
+                this.siteName = this.sitemapspl[2];
+                this.homepage = this.sitemapspl[0] + '/' + this.sitemapspl[1] + '/' + this.sitemapspl[2];
+                var tmp = this.siteName.split('.');
+                if (tmp.length == 2)
+                    this.siteFolder = tmp[0]
+                else if (tmp.length == 3)
+                    this.siteFolder = tmp[1]
+                else
+                    throw new Error('invalid url');
+                this.sitemapFileName = this.siteFolder + '/' + this.siteFolder + '.json'
+                this.allpages = [];
+                this.curPageIndex = -1;
+                this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
+                this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+                this.pagesFolder = this.folder + "/pages";
+                this.siteIdxFile = this.siteFolder + '/' + this.siteFolder + '-index.json';
+            }
+
+            if (options.loadIndex) {
+                this.idx = this.loadindex();
+            }
         }
-        this.siteIdxFile = 'index/vlocalshop-index.json';
-        this.idx = this.loadindex();
     }
 
     get folder() {
@@ -70,7 +77,7 @@ class MiNi {
                 var pages = sites.sites;
                 logger.debug('no of pages =' + pages.length);
                 pages.forEach(page => {
-                    allpages.push({ "id": page, "title": "", "keywords": "", "description": "" });
+                    allpages.push({ "id": page, "title": "", "description": "", "aggregateRating": {} });
                 });
                 fs.writeFileSync(temp, JSON.stringify(allpages));
                 logger.debug('sitemap written to local fs ' + temp);
@@ -90,7 +97,7 @@ class MiNi {
                 var tmp = page.split('/');
                 pageName += tmp[tmp.length - 1];
             }
-            pageName += ".html"
+
             logger.debug('loading page...' + pageName);
             fetch(page).then(res => res.text()).then(body => {
                 fs.writeFileSync(pageName, body);
@@ -130,7 +137,11 @@ class MiNi {
             JSDOM.fromFile(pageName, {}).then(dom => {
                 this.allpages[this.curPageIndex].title = dom.window.document.querySelector("title").textContent;
                 this.allpages[this.curPageIndex].description = dom.window.document.head.querySelector("[name=\"description\"]").content;
-                this.allpages[this.curPageIndex].keywords = dom.window.document.head.querySelector("[name=\"keywords\"]").content;
+                var ldscript = dom.window.document.querySelector('script[type="application/ld+json"]');
+                if (ldscript) {
+                    var jsonld = JSON.parse(ldscript.innerHTML);
+                    this.allpages[this.curPageIndex].aggregateRating = jsonld.aggregateRating;
+                }
                 fs.writeFileSync(this.sitemapFileName, JSON.stringify(this.allpages));
             });
         } catch (e) {
@@ -139,8 +150,28 @@ class MiNi {
         }
     }
 
-    createLunrIndex(fileName, siteName) {
-        fs.readFile(fileName, (err, data) => {
+    test(pageName) {
+        return new Promise((resolve, reject) => {
+            try {
+                var t = JSDOM.fromFile(pageName, {}).then(dom => {
+                    var title = dom.window.document.querySelector("title").textContent;
+                    var ldscript = dom.window.document.querySelector('script[type="application/ld+json"]');
+                    var jsonld = JSON.parse(ldscript.innerHTML);
+                    console.log(jsonld.aggregateRating)
+                    return title;
+                });
+                resolve(t);
+            } catch (e) {
+                logger.debug(e.stack);
+                reject(e);
+            }
+        });
+
+    }
+
+    createIndexForSite(siteName) {
+        var siterawfile = siteName + '/' + siteName + '.json';
+        fs.readFile(siterawfile, (err, data) => {
             if (err) {
                 console.log('error reading file - ' + fileName);
                 console.log(err.stack);
@@ -157,7 +188,7 @@ class MiNi {
                     }
                 });
                 var serializedIdx = JSON.stringify(idx);
-                fs.writeFile(siteName + '-index.json', serializedIdx, (err) => {
+                fs.writeFile(this.siteIdxFile, serializedIdx, (err) => {
                     if (err) throw err;
                     console.log('index written to file');
                 });
@@ -171,13 +202,18 @@ class MiNi {
     loadindex() {
         var data = fs.readFileSync(this.siteIdxFile);
         var idx = lunr.Index.load(JSON.parse(data));
+        this.allpages =  JSON.parse(fs.readFileSync(this.sitemapFileName));
+        
         return idx;
     }
 
     search(query) {
         try {
             var result = this.idx.search(query);
-            return result;
+            return result.map((item) => {
+                return this.allpages.find((p) => item.ref === p.id)
+            })
+            
         } catch (e) {
             console.log(e.stack);
             throw e;

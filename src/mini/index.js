@@ -12,15 +12,33 @@ console.log(
     )
 );
 
-const run = async () => {
-    //const url = await _mini.askUrlToIndex();
+const runSiteLoad = async () => {
+    //const url = 'https://www.vlocalshop.in/sitemap.xml';
+    const url = await _mini.askUrlToIndex();
+    var options = { sitemap: url };
+    var mini = new MiNi(options);
+    mini.loadsite();
+}
+
+const runSiteIndex = async () => {
     const url = 'https://www.vlocalshop.in/sitemap.xml';
-    //console.log('url to index - ' + JSON.stringify(url));
-    //var mini = new MiNi(url);
-    //mini.createLunrIndex('vlocalshop/vlocalshop.json','vlocalshop');
+    var options = { sitemap: url };
+    var mini = new MiNi(options);
+    mini.createIndexForSite('vlocalshop');
+}
+
+const searchSite = async () => {
+    const url = 'https://www.vlocalshop.in/sitemap.xml';
+    var options = { sitemap: url, loadIndex: true };
+    var mini = new MiNi(options);
+    var result = mini.search('apacs ziggler');
+    console.log(result);
+}
+
+const runTestLoad = async () => {
     var mini = new MiNi();
-    let result = mini.search("everlast");
+    let result = await mini.test('./vlocalshop/sample.html');
     console.log(result);
 };
 
-run();
+searchSite();
