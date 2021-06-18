@@ -7,7 +7,7 @@ const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const cliProgress = require('cli-progress');
 const lunr = require("lunr");
-const { isDebugEnabled } = require('./logger/logger');
+const { isDebugEnabled } = require('../logger/logger');
 
 class MiNiLiNing {
 

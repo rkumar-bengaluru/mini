@@ -1,6 +1,6 @@
 
 const lunr = require("lunr");
-let json = require('../../index/vlocalshop-index.json');
+let json = require('../../vlocalshop/vlocalshop-index.json');
 
 export default class MiNiWeb {
 
