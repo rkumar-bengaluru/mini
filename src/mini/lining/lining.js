@@ -9,6 +9,7 @@ const { JSDOM } = jsdom;
 const cliProgress = require('cli-progress');
 const lunr = require("lunr");
 const { isDebugEnabled } = require('../logger/logger');
+const resizeImg = require('resize-img');
 
 class MiNiLiNing {
 
@@ -16,8 +17,11 @@ class MiNiLiNing {
         this.srcDir = src;
         this.destDir = dest;
         this.allfiles = [];
-        this.politePolicyInterval = 5000;// 5 seconds interval to load pages.
+        this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
         this.curFileIndex = -1;
+        this.allImagesToResize = [];
+        this.interval = {};
+        this.failed = [];
     }
 
     startConverting = async () => {
@@ -27,15 +31,45 @@ class MiNiLiNing {
         setInterval(this.advanceConvert, this.politePolicyInterval);
     }
 
+    startImageProcessing = async () => {
+        logger.debug('converting...')
+        this.allfiles = await this.fetchFilesToConvert(this.srcDir);
+        logger.debug('this.allfiles...' + this.allfiles.length);
+        this.interval = setInterval(() => {
+            this.advanceConvert()
+        }, this.politePolicyInterval);
+        logger.debug('timer interval ' + this.interval);
+    }
+
     advanceConvert = async () => {
         ++this.curFileIndex;
         if (this.curFileIndex >= this.allfiles.length) {
+            this.processImageProcessing();
+            logger.debug('timer interval ' + this.interval + ', this.curFileIndex ' + this.curFileIndex);
+            clearInterval(this.interval);
+            // write all failed files.
+            fs.writeFileSync(this.destDir + '/failed.json', JSON.stringify(this.failed));
+            logger.debug('all faied files --' + JSON.stringify(this.failed));
             return;
         }
         logger.debug('reading file...' + this.allfiles[this.curFileIndex]);
-        this.prepareProductData01(this.srcDir + this.allfiles[this.curFileIndex]);
+        try {
+            await this.prepareProductData01(this.srcDir + this.allfiles[this.curFileIndex]);
+        } catch (e) {
+            logger.debug('error detected');
+        } finally {
+            logger.debug('finally');
+        }
+
         //let pagedownloaded = await this.convert(this.allfiles[this.curFileIndex]);   // set new news item into the ticker
         //logger.debug('page convert over...' + pagedownloaded);
+    }
+
+    processImageProcessing() {
+        this.allImagesToResize.forEach(image => {
+            logger.debug('resizing image -- ' + image);
+            this.resizeImage(image + '/01.jpg', image + '/01-small.jpg');
+        })
     }
 
 
@@ -54,7 +88,7 @@ class MiNiLiNing {
                 files.forEach(file => {
                     allpages.push(file);
                 });
-                logger.debug(allpages);
+                //logger.debug(JSON.stringify(allpages));
                 resolve(allpages);
             });
 
@@ -72,7 +106,12 @@ class MiNiLiNing {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
         logger.debug("/create -->" + result);
-        return result;
+        // verify that this is unique.
+        var dirToCheck = '../gitprojects/localshop/data/catalog/productsv2/' + result + '.json';
+        if (!fs.existsSync(dirToCheck)) {
+            return result;
+        }
+        throw new Error('ASIN already exist ' + result);
     }
 
     getRandomInt(min, max) {
@@ -94,71 +133,182 @@ class MiNiLiNing {
 
     download = function (uri, filename, callback) {
         request.head(uri, function (err, res, body) {
-            console.log('content-type:', res.headers['content-type']);
-            console.log('content-length:', res.headers['content-length']);
-            console.log('destinationFile->' + filename);
+            //console.log('content-type:', res.headers['content-type']);
+            //console.log('content-length:', res.headers['content-length']);
+            //console.log('destinationFile->' + filename);
             request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
         });
     };
 
-    fetchImage(imageUrl, destFile) {
-        return new Promise((resolve, reject) => {
-            logger.debug('loading image...' + imageUrl);
-            fetch(imageUrl).then(res => res.text()).then(body => {
-                fs.writeFileSync(destFile, body);
+    resizeImage(src, target) {
+        (async () => {
+            const image = await resizeImg(fs.readFileSync(src), {
+                width: 250,
+                height: 250
             });
-            resolve(imageUrl);
-        });
+
+            fs.writeFileSync(target, image);
+        })();
+    }
+
+    changePrice(current) {
+        var low = current - 200;
+        var up = current + 200;
+
+        low = Math.ceil(low);
+        up = Math.floor(up);
+        return Math.floor(Math.random() * (up - low) + low);
+    }
+
+    removeSpaceFromBegining(input) {
+        if (input[0] === ' ')
+            return this.removeSpaceFromBegining(input.substring(1));
+        return input;
+    }
+
+    removeSpaceFromEnd(input) {
+        return input.replace(/\s*$/, "");
+    }
+
+    findProductCategory(dom) {
+        var category = this.findCategory(dom);
+        //logger.debug('category ' + category);
+        if (category === 'Badminton Racket') {
+            return ' > Sports & Fitness > badminton > li-ning > racquet';
+        } else if (category === 'Kit Bags') {
+            return ' > Sports & Fitness > badminton > li-ning > kitbag';
+        } else if (category === 'Badminton Accessories') {
+            return ' > Sports & Fitness > badminton > li-ning > accessories';
+        } else if (category === 'Badminton Shoes') {
+            return ' > Sports & Fitness > badminton > li-ning > shoes';
+        } else if (category === 'Shuttlecocks') {
+            return ' > Sports & Fitness > badminton > li-ning > shuttle';
+        } else if (category === 'Apparel') {
+            return ' > Sports & Fitness > badminton > li-ning > apparel';
+        }
+        throw new Error('unknown category ' + category);
+    }
+
+    findCategory(dom) {
+        var x = dom.window.document.getElementsByClassName("product_category");
+        var category = x[1].textContent;
+        category = category.split('\n').join('');
+        category = this.removeSpaceFromBegining(category);
+        category = this.removeSpaceFromEnd(category);
+        return category;
+    }
+
+    findProductTitle(dom, ldson) {
+        var category = this.findCategory(dom);
+        //logger.debug('category ' + category);
+        if (category === 'Badminton Racket') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Racquet with Free Full Cover';;
+        } else if (category === 'Kit Bags') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Kit Bag';
+        } else if (category === 'Badminton Accessories') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Accessories';
+        } else if (category === 'Badminton Shoes') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Shoes';
+        } else if (category === 'Shuttlecocks') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Shuttle';
+        } else if (category === 'Apparel') {
+            return 'Li-Ning™ ' + ldson.name + ' Badminton Apparel';
+        }
+        throw new Error('unknown category ' + category);
+    }
+
+    downloadImages(imagesDiv, asin) {
+        var j = 1;
+        var detination = this.destDir + 'images/' + asin;
+        if (!fs.existsSync(detination)) {
+            fs.mkdirSync(detination);
+        }
+        for (var i = 0; i < imagesDiv.length; i++) {
+            var imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("data-src");
+            if (!imageUrl) {
+                //logger.debug(imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src"));
+                imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src");
+            }
+            var imagesrc = imageUrl.split('/');
+            imagesrc = imagesrc[imagesrc.length - 1]
+            //console.log('---' + imagesrc.split('.')[1]);
+            var fileType = imagesrc.split('.')[1];
+            var tmp = 'https://www.vlocalshop.in/catalog/' + asin + '/' + '0' + j + '.' + fileType;
+            //this.fetchImage(imageUrl, detinationDir + '/' + '0' + j + '.' + fileType);
+            this.download(imageUrl, detination + '/' + '0' + j + '.' + fileType, function () {
+                //console.log('done image downloading...');
+            });
+            if (j == 1) {
+                this.allImagesToResize.push(detination);
+                //this.resizeImage(detination + '/' + '0' + j + '.' + fileType, detination + '/' + '0' + j + '-small.' + fileType);
+                //logger.debug('image resizing done...');
+            }
+
+            j++;
+        }
+    }
+
+    formatMRP(mrp) {
+        var n = mrp.split(',').join('');
+        n = n.split('.')[0];
+        return n;
+    }
+
+    probe(page) {
+        this.prepareProductData01(page);
+    }
+
+    createSuccessList() {
+
     }
 
     prepareProductData01(page) {
-        try {
 
+        try {
             JSDOM.fromFile(page, {}).then(dom => {
                 var ldson = JSON.parse(dom.window.document.querySelector('script[type="application/ld+json"]').innerHTML);
-                var product = { "@context": 'https://schema.org', '@id': 'https://www.vlocalshop.in/product/' + ldson.sku, '@type': 'Product' };
-                product.productID = ldson.sku;
-                product.name = 'Li-Ning ' + ldson.name;
-                product.sku = ldson.sku;
-                product.mpn = ldson.sku;
+                var asin = this.createASIN();
+                var product = { "@context": 'https://schema.org', '@id': 'https://www.vlocalshop.in/product/' + asin, '@type': 'Product' };
+                product.productID = asin;
+                product.name = this.findProductTitle(dom, ldson);
+                product.sku = asin;
+                product.mpn = asin;
                 let brand = { '@type': 'Brand', name: ldson.brand.name };
                 product.brand = brand;
                 product.description = ldson.description;
                 product.manufacturer = 'Li-Ning';
-                product.category = ' > Sports & Fitness > badminton > li-ning > racquet';
-                product.logo = 'https://www.vlocalshop.in/catalog/' + ldson.sku + '/01.jpg';
-
+                product.category = this.findProductCategory(dom);
+                product.logo = 'https://www.vlocalshop.in/catalog/' + asin + '/01.jpg';
+                var changedPrice = this.changePrice(ldson.offers[0].price);
+                //logger.debug('offer price ' + ldson.offers[0].price + ", newOffer " + changedPrice);
                 let offers = {
                     "@type": "Offer",
-                    "url": 'https://www.vlocalshop.in/product/' + ldson.sku,
+                    "url": 'https://www.vlocalshop.in/product/' + asin,
                     "priceCurrency": "INR",
-                    "price": ldson.offers[0].price,
+                    "price": changedPrice,
                     "priceValidUntil": "2030-12-31",
                     "itemCondition": "https://schema.org/NewCondition",
                     "availability": "https://schema.org/InStock"
                 };
                 product.offers = offers;
                 let images = [];
-                var x = dom.window.document.getElementsByClassName("gallery-item");
+                var imagesDiv = dom.window.document.getElementsByClassName("gallery-item");
+
                 var j = 1;
-                var detination = this.destDir + 'images/' + ldson.sku;
-                if (!fs.existsSync(detination)) {
-                    fs.mkdirSync(detination);
-                }
-                for (var i = 0; i < x.length; i++) {
-                    var imageUrl = x.item(i).getElementsByTagName('img').item(0).getAttribute("data-src");
+                for (var i = 0; i < imagesDiv.length; i++) {
+                    var imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("data-src");
+                    if (!imageUrl) {
+                        //logger.debug(imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src"));
+                        imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src");
+                    }
+
                     var imagesrc = imageUrl.split('/');
                     imagesrc = imagesrc[imagesrc.length - 1]
-                    console.log('---' + imagesrc.split('.')[1]);
                     var fileType = imagesrc.split('.')[1];
-                    var tmp = 'https://www.vlocalshop.in/catalog/' + ldson.sku + '/' + '0' + j + '.' + fileType;
-                    //this.fetchImage(imageUrl, detinationDir + '/' + '0' + j + '.' + fileType);
-                    this.download(imageUrl, detination + '/' + '0' + j + '.' + fileType, function () {
-                        console.log('done');
-                    });
+                    var tmp = 'https://www.vlocalshop.in/catalog/' + asin + '/' + '0' + j + '.' + fileType;
                     images.push(tmp);
-                    j++;
                 }
+
                 product.images = images;
                 let aggregateRating = {
                     "@type": "AggregateRating",
@@ -172,7 +322,8 @@ class MiNiLiNing {
                 product.review = reviews;
                 var x = dom.window.document.getElementsByClassName("mrp").item(0).textContent;
                 var mrp = this.removeSpecialChars(x).substring(2);
-                console.log('mrp ->' + mrp);
+                mrp = this.formatMRP(mrp);
+
                 let market = {
                     "amazon": 'NA',
                     "amazonPrice": 'NA',
@@ -186,7 +337,7 @@ class MiNiLiNing {
                     header = this.removeSpecialChars(header);
                     var body = specs.rows[i].cells[1].textContent
                     body = this.removeSpecialChars(body);
-                    console.log('header->' + header + ", body->" + body);
+                    //console.log('header->' + header + ", body->" + body);
                     var feature = header + ':' + body;
                     features.push(feature);
                 }
@@ -203,14 +354,20 @@ class MiNiLiNing {
                     "MARKET": market
                 }
                 product.vlocal = vlocal;
-                fs.writeFileSync(this.destDir + '/productsv2/' + ldson.sku + '.json', JSON.stringify(product));
+                fs.writeFileSync(this.destDir + '/productsv2/' + asin + '.json', JSON.stringify(product));
+                this.downloadImages(imagesDiv, asin);
 
-                logger.debug(JSON.stringify(product));
+                //this.resizeImage(detination + '/' + '01.' + fileType,detination + '/' + '01-small.' + fileType);
+                //logger.debug(JSON.stringify(product));
             });
         } catch (e) {
+            console.log('--------------' + e.message);
+            this.failed.push(page);
             logger.debug(e.stack);
+
             throw e;
         }
+
     }
 
 }
