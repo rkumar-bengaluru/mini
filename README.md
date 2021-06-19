@@ -63,28 +63,33 @@ const  searchSite = async () => {
 ```
 ### Sample Search Result JSON :
 ```json
- {
-    id: 'https://www.yoursite.com/product/YourMatchingProductId-01',
-    title: 'Your Webpage Title On this Page',
-    description: 'Your Webpage Description On this Page',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.3',
-      ratingCount: 3,
-      reviewCount: 2
-    },
-    image: 'https://www.yoursite.com/images/product.jpg'
-  },
-  {
-    id: 'https://www.yoursite.com/product/YourMatchingProductId-02',
-    title: 'Your Webpage Title On this Page',
-    description: 'Your Webpage Description On this Page',
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.5',
-      ratingCount: 2,
-      reviewCount: 2
-    },
-    image: 'https://www.yoursite.com/catalog/VB48PAD0W5/01-small.jpg'
-  }
+[
+	{
+		"id" : "https://www.yoursite.com/product/YourMatchingProductId-01",
+		"title" : "Your Webpage Title On this Page",
+		"description" : "Your Webpage Description On this Page",
+		"aggregateRating" : 		{
+			"@type" : "AggregateRating",
+			"ratingValue" : "4.3",
+			"ratingCount" : 3,
+			"reviewCount" : 2
+		},
+		"image" : "https://www.yoursite.com/images/product01.jpg"
+	},
+	{
+		"id" : "https://www.yoursite.com/product/YourMatchingProductId-02",
+		"title" : "Your Webpage Title On this Page",
+		"description" : "Your Webpage Description On this Page",
+		"aggregateRating" : 		{
+			"@type" : "AggregateRating",
+			"ratingValue" : 4.5,
+			"ratingCount" : 2,
+			"reviewCount" : 2
+		},
+		"image" : "https://www.yoursite.com/images/product01.jpg"
+	},
+    {
+        // more results...
+    } 
+]
 ```
