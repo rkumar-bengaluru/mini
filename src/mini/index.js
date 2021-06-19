@@ -20,8 +20,8 @@ const runSiteLoad = async () => {
 }
 
 const runSiteIndex = async () => {
-    const url = 'https://www.vlocalshop.in/sitemap.xml';
-    var options = { sitemap: url };
+    const urltoindex = 'https://www.vlocalshop.in/sitemap.xml';
+    var options = { url: urltoindex };
     var mini = new MiNi(options);
     mini.createIndexForSite('vlocalshop');
 }

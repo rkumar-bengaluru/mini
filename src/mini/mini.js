@@ -37,7 +37,7 @@ class MiNi {
                 this.siteIdxFile = this.siteFolder + '/' + this.siteFolder + '-index.json';
             }
 
-            if (options.loadIndex) {
+            if (opt.loadIndex) {
                 this.idx = this.loadindex();
             }
         }

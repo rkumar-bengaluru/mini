@@ -1,6 +1,6 @@
 # MiNi - a light weight search engine
  
-![](https://rkumar-bengaluru.github.io/mini/images/mini.webp) a lightweight search engine library for your website. Download and generate indexes for your website using the sitemap and use the index file for searching within your website.
+![](https://rkumar-bengaluru.github.io/mini/images/mini-ask.webp) a lightweight search engine library for your website. Download and generate indexes for your website using the sitemap and use the index file for searching within your website.
 
 ## Want to see it in action
 
@@ -13,13 +13,26 @@ git clonse https://github.com/rkumar-bengaluru/mini
 ```
 npm run build
 ```
+### Site Data Preparation Stage
 ```
 npm run index
 ```
 This will start the command line process as below:-
 
-![](https://rkumar-bengaluru.github.io/mini/images/mini.webp)
-```
-Enter the website sitemap.xml file location
+![](https://rkumar-bengaluru.github.io/mini/images/mini-ask.webp)
+
+Enter the website sitemap.xml file location, thiss will initiate the data preparation for the website in question. Below you can monitor the progress of the data preparation stage. This might take few minutes to hours depending on the number of the pages of your site.
+
+![](https://rkumar-bengaluru.github.io/mini/images/min-progress.webp)
+
+### Site Indexing Stage
+ ```javascript
+const  runSiteIndex = async () => {
+	const urltoindex = 'https://www.yoursite.com/sitemap.xml';
+	var options = { url:  urltoindex };
+	var mini = new MiNi(options);
+	mini.createIndexForSite('dir-to-keepg-enerated-index');
+}
+runSiteIndex();
 ```
 
