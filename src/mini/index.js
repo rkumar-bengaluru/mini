@@ -46,4 +46,4 @@ const updateImage = async () => {
     await mini.updateFileWithImage('./vlocalshop/v.json');
 };
 
-updateImage();
+searchSite();
