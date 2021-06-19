@@ -31,7 +31,7 @@ const  runSiteIndex = async () => {
 	const urltoindex = 'https://www.yoursite.com/sitemap.xml';
 	var options = { url:  urltoindex };
 	var mini = new MiNi(options);
-	mini.createIndexForSite('dir-to-keepg-enerated-index');
+	mini.createIndexForSite('dir-to-keep-generated-index');
 }
 runSiteIndex();
 ```
