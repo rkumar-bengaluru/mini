@@ -87,9 +87,6 @@ const  searchSite = async () => {
 			"reviewCount" : 2
 		},
 		"image" : "https://www.yoursite.com/images/product01.jpg"
-	},
-    {
-        // more results...
-    } 
+	}
 ]
 ```
