@@ -27,8 +27,8 @@ const runSiteIndex = async () => {
 }
 
 const searchSite = async () => {
-    const url = 'https://www.vlocalshop.in/sitemap.xml';
-    var options = { sitemap: url, loadIndex: true };
+    const indexedUrl = 'https://www.vlocalshop.in/sitemap.xml';
+    var options = { url: indexedUrl, loadIndex: true };
     var mini = new MiNi(options);
     var result = mini.search('apacs ziggler');
     console.log(result);
@@ -45,4 +45,4 @@ const updateImage = async () => {
     await mini.updateFileWithImage('./vlocalshop/v.json');
 };
 
-runSiteLoad();
+searchSite();

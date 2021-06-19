@@ -35,4 +35,56 @@ const  runSiteIndex = async () => {
 }
 runSiteIndex();
 ```
+### Search Integration Stage (Frontend - Web Browser)
+```javascript
+import  MiNiWeb  from  './mini/miniweb';
+let  mini = new  MiNiWeb();
 
+function yourSearchFunction() {
+	let  result = mini.search(query);
+	console.log(result);
+	// use this the way you want with your website css
+	// and other methods of your project. Enjoy :)!
+}
+```
+
+### Search Integration Stage (Backend - Node JS)
+```javascript
+const  MiNi = require('./mini');
+let  mini = new  MiNiWeb();
+
+const  searchSite = async () => {
+	const indexedUrl = 'https://www.yoursite.com/sitemap.xml';
+	var options = { url:  indexedUrl, loadIndex:  true };
+	var mini = new  MiNi(options);
+	var result = mini.search('search-query');
+	console.log(result);
+}
+```
+### Sample Search Result JSON :
+```json
+ {
+    id: 'https://www.yoursite.com/product/YourMatchingProductId-01',
+    title: 'Your Webpage Title On this Page',
+    description: 'Your Webpage Description On this Page',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.3',
+      ratingCount: 3,
+      reviewCount: 2
+    },
+    image: 'https://www.yoursite.com/images/product.jpg'
+  },
+  {
+    id: 'https://www.yoursite.com/product/YourMatchingProductId-02',
+    title: 'Your Webpage Title On this Page',
+    description: 'Your Webpage Description On this Page',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.5',
+      ratingCount: 2,
+      reviewCount: 2
+    },
+    image: 'https://www.yoursite.com/catalog/VB48PAD0W5/01-small.jpg'
+  }
+```
