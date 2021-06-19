@@ -27,10 +27,10 @@ function renderMeta(ratings,review) {
     meta += '<div class=\"stars-wrapper stars-main\">';
     meta += '<div>';
     for(var i = 0; i < noOfStars;i++) {
-        meta += '<img width=\'16\' height=\'15\' src=\'/images/star.svg\' alt=\'five star ratings\' />';
+        meta += '<img width=\'16\' height=\'15\' src=\'images/star.svg\' alt=\'five star ratings\' />';
     } 
     if(halfstar) {
-        meta += '<img width=\'16\' height=\'15\' src=\'/images/half-star.svg\' alt=\'five star ratings\' />';
+        meta += '<img width=\'16\' height=\'15\' src=\'images/half-star.svg\' alt=\'five star ratings\' />';
     }
     meta += ' Ratings - ' + ratings + ' - ' + review + 'reviews';
     meta += '</div>';
