@@ -14,8 +14,7 @@ console.log(
 
 const runSiteLoad = async () => {
     //const url = 'https://www.vlocalshop.in/sitemap.xml';
-    const url = await _mini.askUrlToIndex();
-    var options = { sitemap: url };
+    const options = await _mini.askUrlToIndex();
     var mini = new MiNi(options);
     mini.loadsite();
 }
@@ -46,4 +45,4 @@ const updateImage = async () => {
     await mini.updateFileWithImage('./vlocalshop/v.json');
 };
 
-searchSite();
+runSiteLoad();

@@ -14,9 +14,10 @@ class MiNi {
     constructor(options) {
         if (options) {
             var opt = JSON.parse(JSON.stringify(options));
-            if (options.sitemap) {
-                logger.debug('url to fetch ' + opt.sitemap);
-                this.sitemap = options.sitemap;
+            logger.debug(JSON.stringify(opt));
+            if (opt.url) {
+                logger.debug('url to fetch ' + opt.url);
+                this.sitemap = opt.url;
                 this.sitemapspl = this.sitemap.split('/');
                 this.siteName = this.sitemapspl[2];
                 this.homepage = this.sitemapspl[0] + '/' + this.sitemapspl[1] + '/' + this.sitemapspl[2];
