@@ -23,14 +23,14 @@ function renderMeta(ratings,review) {
     if(decimal > 0)
         halfstar = true;
     
-    console.log('noOfStars - ' + noOfStars + ", halfStars - " + halfstar);
     meta += '<div class=\"stars-wrapper stars-main\">';
     meta += '<div>';
+    console.log('star image change - src=\"images/mini.svg\"');
     for(var i = 0; i < noOfStars;i++) {
-        meta += '<img width=\'16\' height=\'15\' src=\'/mini/images/star.svg\' alt=\'five star ratings\' />';
+        meta += '<img width=\'16\' height=\'15\' src=\"images/star.svg\" alt=\'five star ratings\' />';
     } 
     if(halfstar) {
-        meta += '<img width=\'16\' height=\'15\' src=\'/mini/images/half-star.svg\' alt=\'five star ratings\' />';
+        meta += '<img width=\'16\' height=\'15\' src=\"images/half-star.svg\" alt=\'five star ratings\' />';
     }
     meta += ' Ratings - ' + ratings + ' - ' + review + 'reviews';
     meta += '</div>';
