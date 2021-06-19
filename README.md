@@ -8,7 +8,7 @@ Click the Demo Link **[DEMO LINK](https://rkumar-bengaluru.github.io/mini/)**
 
 ## How to generate the website index
 ```
-git clonse https://github.com/rkumar-bengaluru/mini
+git clone https://github.com/rkumar-bengaluru/mini
 ```
 ```
 npm run build
