@@ -13,6 +13,33 @@ mini_head += ' </div></div></div>';
 mini_head += '</div>';
 mini_head += '<div id=\'mini-results-response-time\' class=\'mini-results-response-time\'></div>';
 
+function renderMeta(ratings,review) {
+    var currentRating = parseFloat((ratings)).toFixed(1);
+    var meta = '<div class=\"stars-wrapper stars mb-2\">';
+    meta += '<div>';
+    var noOfStars = Math.floor(currentRating);
+    var decimal = currentRating - noOfStars;
+    var halfstar = false;
+    if(decimal > 0)
+        halfstar = true;
+    
+    console.log('noOfStars - ' + noOfStars + ", halfStars - " + halfstar);
+    meta += '<div class=\"stars-wrapper stars-main\">';
+    meta += '<div>';
+    for(var i = 0; i < noOfStars;i++) {
+        meta += '<img width=\'16\' height=\'15\' src=\'/images/star.svg\' alt=\'five star ratings\' />';
+    } 
+    if(halfstar) {
+        meta += '<img width=\'16\' height=\'15\' src=\'/images/half-star.svg\' alt=\'five star ratings\' />';
+    }
+    meta += ' Ratings - ' + ratings + ' - ' + review + 'reviews';
+    meta += '</div>';
+    meta += '</div>';
+    meta += '</div>';
+    meta += '</div>';
+    return meta;
+}
+
 function performsearch() {
     document.getElementById('error').innerHTML = '';
     var query = document.getElementById('mini-search-input').value;
@@ -29,20 +56,21 @@ function performsearch() {
     console.log('response size...' + result.length);
     var rtime = 'About ' + result.total + ' resuls in ' + result.time + ' seconds,filtered best ' + result.bestCount + ' below...'
     console.log('rtime->' + rtime);
-    document.getElementById('mini-results-response-time').innerHTML  = rtime;
+    document.getElementById('mini-results-response-time').innerHTML = rtime;
     var response = '';
     result.best.forEach(function (r) {
         if (typeof r !== 'undefined') {
-            response += '<div class=\"mini-result-row\"><div class=\"row\"><div class=\'column\'>';
-            response += '<div class=\"mini-result-src\"><a target=\'_blank\'href=\'' + r.ref + '\'>' + r.ref + '</a></div>';
-            response += '<a target=\'_blank\'href=\'' + r.ref + '\'>' + '<div class=\"mini-result-title\">' + r.ref + '</div></a></div>';
-            response += '<div class=\"mini-result-desc\">' + 'description to do' + '</div>';
-            if (r.score) {
-                response += '<div class=\"mini-result-meta\">' + r.score + '</div>';
-            } else {
-                response += '<div class=\"mini-result-meta\">' + 'NA' + '</div>';
-            }
-            response += '</div></div></div>';
+            var title = r.title.substring(0, 50) + '...';
+            response += '<div class=\"mini-result-row\"><div class=\"row\">';
+            response += '<div class=\'column\'><div class=\"mini-result-img\"><img heigth=\'100px\' width=\'100px\' src=' + r.image + ' alt=' + r.title + '/></div></div>';
+            response += '<div class=\'column\'>';
+            response += '<div class=\"mini-result-src\"><a target=\'_blank\'href=\'' + r.id + '\'>' + r.id + '</a></div>';
+            response += '<a target=\'_blank\'href=\'' + r.id + '\'>' + '<div class=\"mini-result-title\">' + title + '</div></a>';
+            response += '<div class=\"mini-result-desc\">' + r.description + '</div>';
+            response += '<div class=\"mini-result-meta\"> '
+            response += renderMeta(r.aggregateRating.ratingValue,r.aggregateRating.reviewCount);
+            response += '</div>';
+            response += '</div></div></div><br>';
         }
     });
     if (result.total === 0) {

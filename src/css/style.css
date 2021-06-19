@@ -319,3 +319,9 @@ footer {
 .mini-error {
     color: rgb(231, 23, 23);
 }
+
+.stars-wrapper{display:flex;flex-wrap:wrap;width:100%}
+.stars{margin-top:10;margin-bottom:20;border-radius:20;color:#0e0a05}
+.stars,
+.stars-main{align-items:center;flex-direction:row;font-size:10px}
+.stars-main{margin-top:5;margin-bottom:5}
