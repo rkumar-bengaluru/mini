@@ -8,7 +8,7 @@ export default class MiNiWeb {
     constructor() {
         this.idx = this.loadindex();
         this.allProducts = productMetaFile;
-        console.log('loaded in browser');
+        //console.log('loaded in browser');
     }
 
     loadindex() {
@@ -19,7 +19,7 @@ export default class MiNiWeb {
     search(query) {
         try {
             var t1 = Math.round(Date.now() );
-            console.log('query from mini -' + query);
+            //console.log('query from mini -' + query);
             var result = this.idx.search(query);
             var response = result.map((item) => {
                 return this.allProducts.find((p) => item.ref === p.id)
@@ -29,12 +29,12 @@ export default class MiNiWeb {
                 best10.push(result[i]);
             var t2 = Math.round(Date.now());
             var diff = ((t2-t1)/1000).toFixed(3);
-            console.log('response length from mini -' + result.length + ',diff-' + diff);
+            //console.log('response length from mini -' + result.length + ',diff-' + diff);
             var response = { 'total': result.length, 'time': diff, 'bestCount': 10, 'best': response }
 
             return response;
         } catch (e) {
-            console.log(e.stack);
+            //console.log(e.stack);
             throw e;
         }
     }

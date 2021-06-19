@@ -25,7 +25,7 @@ function renderMeta(ratings,review) {
     
     meta += '<div class=\"stars-wrapper stars-main\">';
     meta += '<div>';
-    console.log('star image change - src=\"images/mini.svg\"');
+    //console.log('star image change - src=\"images/mini.svg\"');
     for(var i = 0; i < noOfStars;i++) {
         meta += '<img width=\'16\' height=\'15\' src=\"images/star.svg\" alt=\'five star ratings\' />';
     } 
@@ -43,7 +43,7 @@ function renderMeta(ratings,review) {
 function performsearch() {
     document.getElementById('error').innerHTML = '';
     var query = document.getElementById('mini-search-input').value;
-    console.log('query =' + query);
+    //console.log('query =' + query);
     if (query === '' || query.length === 0) {
         document.getElementById('error').innerHTML = 'please enter a valid query'
         return;
@@ -51,11 +51,11 @@ function performsearch() {
     document.getElementById('mini-head').innerHTML = mini_head;
 
     document.getElementById('mini-search-input').value = query;
-    console.log('search query...' + query);
+    //console.log('search query...' + query);
     let result = mini.search(query);
-    console.log('response size...' + result.length);
+    //console.log('response size...' + result.length);
     var rtime = 'About ' + result.total + ' resuls in ' + result.time + ' seconds,filtered best ' + result.bestCount + ' below...'
-    console.log('rtime->' + rtime);
+    //console.log('rtime->' + rtime);
     document.getElementById('mini-results-response-time').innerHTML = rtime;
     var response = '';
     result.best.forEach(function (r) {
@@ -74,11 +74,11 @@ function performsearch() {
         }
     });
     if (result.total === 0) {
-        console.log('no data' + result.total);
+        //console.log('no data' + result.total);
         document.getElementById('mini-results').innerHTML = '<span class=\"mini-error\">Sorry no results matching your criteria...</span>';
 
     } else {
-        console.log('no of results ' + result.total);
+        //console.log('no of results ' + result.total);
         document.getElementById('mini-results').innerHTML = response;
     }
     init();
@@ -86,10 +86,10 @@ function performsearch() {
 
 function init() {
     try {
-        console.log(document.getElementById('mini-search-input'));
+        //console.log(document.getElementById('mini-search-input'));
         document.getElementById('mini-search-input').addEventListener('keyup', (event) => {
             if (event.key === 'Enter') {
-                console.log('enter clicked...');
+                //console.log('enter clicked...');
                 event.preventDefault();
                 performsearch();
                 return;
@@ -100,7 +100,7 @@ function init() {
             performsearch();
         })
     } catch (e) {
-        console.log(e.stack);
+        //console.log(e.stack);
         document.getElementById('error').innerHTML = e.message;
     }
 }
