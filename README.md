@@ -1,1 +1,2 @@
-# mini
+# mini - a light weight search engine
+![](https://rkumar-bengaluru.github.io/mini/images/mini.webp) a lightweight search engine library for your website. Download and generate indexes for your website using the sitemap and use the index file for searching within your website.
