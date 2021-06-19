@@ -41,4 +41,9 @@ const runTestLoad = async () => {
     console.log(result);
 };
 
-searchSite();
+const updateImage = async () => {
+    var mini = new MiNi();
+    await mini.updateFileWithImage('./vlocalshop/v.json');
+};
+
+updateImage();

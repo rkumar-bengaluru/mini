@@ -202,8 +202,8 @@ class MiNi {
     loadindex() {
         var data = fs.readFileSync(this.siteIdxFile);
         var idx = lunr.Index.load(JSON.parse(data));
-        this.allpages =  JSON.parse(fs.readFileSync(this.sitemapFileName));
-        
+        this.allpages = JSON.parse(fs.readFileSync(this.sitemapFileName));
+
         return idx;
     }
 
@@ -213,9 +213,31 @@ class MiNi {
             return result.map((item) => {
                 return this.allpages.find((p) => item.ref === p.id)
             })
-            
+
         } catch (e) {
             console.log(e.stack);
+            throw e;
+        }
+    }
+
+    updateFileWithImage(fileName) {
+        try {
+            var data = fs.readFileSync(fileName);
+            var all = JSON.parse(data);
+            all.forEach(function (p) {
+                if (p.id.includes('product/')) {
+                    var image = p.id.replace('product', 'catalog') + '/01-small.jpg';
+                    p.image = image;
+                    logger.debug('image ->' + image);
+                }
+            })
+            var updated = JSON.stringify(all);
+            logger.debug('update ' + updated);
+            fs.writeFile(fileName, updated, (err) => {
+                if (err) throw err;
+                console.log('index written to file');
+            });
+        } catch (e) {
             throw e;
         }
     }
