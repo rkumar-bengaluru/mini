@@ -344,7 +344,7 @@ class MiNiLiNing {
                 var product = { "@context": 'https://schema.org', '@id': 'https://www.vlocalshop.in/product/' + asin, '@type': 'Product' };
                 var category = this.findCategory(dom);
                 logger.debug('product category - ' + category);
-                if (category === 'Badminton Racket') {
+                if (category === 'Shuttlecocks' || category === 'Badminton Accessories'|| category === 'Kit Bags') {
                     logger.debug('mapping product - ' + asin);
                     product.productID = asin;
                     product.name = this.findProductTitle(dom, ldson);
