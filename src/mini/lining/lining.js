@@ -10,6 +10,8 @@ const cliProgress = require('cli-progress');
 const lunr = require("lunr");
 const { isDebugEnabled } = require('../logger/logger');
 const resizeImg = require('resize-img');
+const { execFile } = require('child_process');
+const cwebp = require('cwebp-bin');
 
 class MiNiLiNing {
 
@@ -50,6 +52,7 @@ class MiNiLiNing {
             // write all failed files.
             fs.writeFileSync(this.destDir + '/failed.json', JSON.stringify(this.failed));
             logger.debug('all faied files --' + JSON.stringify(this.failed));
+
             return;
         }
         logger.debug('reading file...' + this.allfiles[this.curFileIndex]);
@@ -78,6 +81,20 @@ class MiNiLiNing {
             var res = this.prepareProductData01();
             resolve(res);
         });
+    }
+
+    fetchProductFolders(srcfolder) {
+        var allpages = [];
+        return new Promise((resolve, reject) => {
+            fs.readdir(srcfolder, (err, files) => {
+                files.forEach(file => {
+                    allpages.push(srcfolder + file + '/');
+                });
+                //logger.debug(JSON.stringify(allpages));
+                resolve(allpages);
+            });
+
+        })
     }
 
     fetchFilesToConvert(srcfolder) {
@@ -235,8 +252,9 @@ class MiNiLiNing {
             var fileType = imagesrc.split('.')[1];
             var tmp = 'https://www.vlocalshop.in/catalog/' + asin + '/' + '0' + j + '.' + fileType;
             //this.fetchImage(imageUrl, detinationDir + '/' + '0' + j + '.' + fileType);
-            this.download(imageUrl, detination + '/' + '0' + j + '.' + fileType, function () {
-                //console.log('done image downloading...');
+            var imageName = detination + '/' + '0' + j + '.' + fileType;
+            var webPImageName = detination + '/' + '0' + j + '.webp';
+            this.download(imageUrl, imageName, function () {
             });
             if (j == 1) {
                 this.allImagesToResize.push(detination);
@@ -246,6 +264,60 @@ class MiNiLiNing {
 
             j++;
         }
+    }
+
+    async convertImages(imageFolder) {
+        logger.debug('image folder...' + imageFolder);
+        var allfiles = await this.fetchFilesToConvert(imageFolder);
+        logger.debug('all images..' + JSON.stringify(allfiles));
+        for (var i = 0; i < allfiles.length; i++) {
+            var imageName = imageFolder + allfiles[i];
+            logger.debug('image to convert...' + imageName);
+            var webPImageName = allfiles[i].split('.')[0] + '.webp';
+            execFile(cwebp, [imageName, '-o', imageFolder + webPImageName], err => {
+                if (err) {
+                    logger.debug(err.stack);
+                    logger.debug('webp convertion failed ' + webPImageName);
+                } else {
+                    logger.debug('webp convertion success ' + webPImageName);
+                }
+            });
+        }
+
+    }
+
+    convertJPG2Web = async () => {
+        logger.debug('converting webp...');
+        var srcDir = this.destDir + 'images/';
+        var allimgfolders = await this.fetchProductFolders(srcDir);
+        for (var i = 0; i < allimgfolders.length; i++) {
+            this.convertImages(allimgfolders[i]);
+        }
+    }
+
+    removeAllJPEG = async () => {
+        logger.debug('converting webp...');
+        var srcDir = this.destDir + 'images/';
+        var allimgfolders = await this.fetchProductFolders(srcDir);
+        for (var i = 0; i < allimgfolders.length; i++) {
+            this.removeAllImages(allimgfolders[i]);
+        }
+    }
+
+    async removeAllImages(imageFolder) {
+        logger.debug('image folder...' + imageFolder);
+        var allfiles = await this.fetchFilesToConvert(imageFolder);
+        logger.debug('all images..' + JSON.stringify(allfiles));
+        for (var i = 0; i < allfiles.length; i++) {
+            var imageName = imageFolder + allfiles[i];
+            var type = imageName.split('.')[1];
+            if (type === 'jpg') {
+                fs.unlinkSync(imageName);
+                logger.debug('removing...' + imageName);
+            }
+            
+        }
+
     }
 
     formatMRP(mrp) {
@@ -267,99 +339,106 @@ class MiNiLiNing {
         try {
             JSDOM.fromFile(page, {}).then(dom => {
                 var ldson = JSON.parse(dom.window.document.querySelector('script[type="application/ld+json"]').innerHTML);
-                var asin = this.createASIN();
+                var asin = ldson.sku;
+                //var asin = this.createASIN();
                 var product = { "@context": 'https://schema.org', '@id': 'https://www.vlocalshop.in/product/' + asin, '@type': 'Product' };
-                product.productID = asin;
-                product.name = this.findProductTitle(dom, ldson);
-                product.sku = asin;
-                product.mpn = asin;
-                let brand = { '@type': 'Brand', name: ldson.brand.name };
-                product.brand = brand;
-                product.description = ldson.description;
-                product.manufacturer = 'Li-Ning';
-                product.category = this.findProductCategory(dom);
-                product.logo = 'https://www.vlocalshop.in/catalog/' + asin + '/01.jpg';
-                var changedPrice = this.changePrice(ldson.offers[0].price);
-                //logger.debug('offer price ' + ldson.offers[0].price + ", newOffer " + changedPrice);
-                let offers = {
-                    "@type": "Offer",
-                    "url": 'https://www.vlocalshop.in/product/' + asin,
-                    "priceCurrency": "INR",
-                    "price": changedPrice,
-                    "priceValidUntil": "2030-12-31",
-                    "itemCondition": "https://schema.org/NewCondition",
-                    "availability": "https://schema.org/InStock"
-                };
-                product.offers = offers;
-                let images = [];
-                var imagesDiv = dom.window.document.getElementsByClassName("gallery-item");
+                var category = this.findCategory(dom);
+                logger.debug('product category - ' + category);
+                if (category === 'Badminton Racket') {
+                    logger.debug('mapping product - ' + asin);
+                    product.productID = asin;
+                    product.name = this.findProductTitle(dom, ldson);
+                    product.sku = asin;
+                    product.mpn = asin;
+                    let brand = { '@type': 'Brand', name: ldson.brand.name };
+                    product.brand = brand;
+                    product.description = ldson.description;
+                    product.manufacturer = 'Li-Ning';
+                    product.category = this.findProductCategory(dom);
+                    product.logo = 'https://www.vlocalshop.in/catalog/' + asin + '/01.jpg';
+                    var changedPrice = this.changePrice(ldson.offers[0].price);
+                    //logger.debug('offer price ' + ldson.offers[0].price + ", newOffer " + changedPrice);
+                    let offers = {
+                        "@type": "Offer",
+                        "url": 'https://www.vlocalshop.in/product/' + asin,
+                        "priceCurrency": "INR",
+                        "price": changedPrice,
+                        "priceValidUntil": "2030-12-31",
+                        "itemCondition": "https://schema.org/NewCondition",
+                        "availability": "https://schema.org/InStock"
+                    };
+                    product.offers = offers;
+                    let images = [];
+                    var imagesDiv = dom.window.document.getElementsByClassName("gallery-item");
 
-                var j = 1;
-                for (var i = 0; i < imagesDiv.length; i++) {
-                    var imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("data-src");
-                    if (!imageUrl) {
-                        //logger.debug(imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src"));
-                        imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src");
+                    var j = 1;
+                    for (var i = 0; i < imagesDiv.length; i++) {
+                        var imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("data-src");
+                        if (!imageUrl) {
+                            //logger.debug(imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src"));
+                            imageUrl = imagesDiv.item(i).getElementsByTagName('img').item(0).getAttribute("src");
+                        }
+
+                        var imagesrc = imageUrl.split('/');
+                        imagesrc = imagesrc[imagesrc.length - 1]
+                        var fileType = imagesrc.split('.')[1];
+                        var tmp = 'https://rkumar-bengaluru.github.io/vlocalshop.webp/catalog/' + asin + '/' + '0' + j + '.webp';
+                        images.push(tmp);
                     }
 
-                    var imagesrc = imageUrl.split('/');
-                    imagesrc = imagesrc[imagesrc.length - 1]
-                    var fileType = imagesrc.split('.')[1];
-                    var tmp = 'https://www.vlocalshop.in/catalog/' + asin + '/' + '0' + j + '.' + fileType;
-                    images.push(tmp);
+                    product.images = images;
+                    let aggregateRating = {
+                        "@type": "AggregateRating",
+                        "ratingValue": this.genRandomRatings(3, 5, 1),
+                        "ratingCount": this.getRandomInt(5, 23),
+                        "reviewCount": this.getRandomInt(2, 9)
+                    };
+                    product.aggregateRating = aggregateRating;
+                    let reviews = [];
+
+                    product.review = reviews;
+                    var x = dom.window.document.getElementsByClassName("mrp").item(0).textContent;
+                    var mrp = this.removeSpecialChars(x).substring(2);
+                    mrp = this.formatMRP(mrp);
+
+                    let market = {
+                        "amazon": 'NA',
+                        "amazonPrice": 'NA',
+                        "flipkart": 'NA',
+                        "flipkartPrice": 'NA'
+                    };
+                    let features = [];
+                    var specs = dom.window.document.getElementById("product-attribute-specs-table");
+                    for (var i = 0; i < specs.rows.length; i++) {
+                        var header = specs.rows[i].cells[0].textContent
+                        header = this.removeSpecialChars(header);
+                        var body = specs.rows[i].cells[1].textContent
+                        body = this.removeSpecialChars(body);
+                        //console.log('header->' + header + ", body->" + body);
+                        var feature = header + ':' + body;
+                        features.push(feature);
+                    }
+
+                    let vlocal = {
+                        "COO": 'Thailand',
+                        "Status": 'Active',
+                        "MOQ": 1,
+                        "TAX": 12,
+                        "HSN": 9506,
+                        "MRP": mrp,
+                        "keyFeatures": features,
+                        "KEYWORDS": ldson.description,
+                        "MARKET": market
+                    }
+                    product.vlocal = vlocal;
+                    fs.writeFileSync(this.destDir + '/productsv2/' + asin + '.json', JSON.stringify(product));
+                    this.downloadImages(imagesDiv, asin);
+
+                    //this.resizeImage(detination + '/' + '01.' + fileType,detination + '/' + '01-small.' + fileType);
+                    //logger.debug(JSON.stringify(product));
                 }
-
-                product.images = images;
-                let aggregateRating = {
-                    "@type": "AggregateRating",
-                    "ratingValue": this.genRandomRatings(3, 5, 1),
-                    "ratingCount": this.getRandomInt(5, 23),
-                    "reviewCount": this.getRandomInt(2, 9)
-                };
-                product.aggregateRating = aggregateRating;
-                let reviews = [];
-
-                product.review = reviews;
-                var x = dom.window.document.getElementsByClassName("mrp").item(0).textContent;
-                var mrp = this.removeSpecialChars(x).substring(2);
-                mrp = this.formatMRP(mrp);
-
-                let market = {
-                    "amazon": 'NA',
-                    "amazonPrice": 'NA',
-                    "flipkart": 'NA',
-                    "flipkartPrice": 'NA'
-                };
-                let features = [];
-                var specs = dom.window.document.getElementById("product-attribute-specs-table");
-                for (var i = 0; i < specs.rows.length; i++) {
-                    var header = specs.rows[i].cells[0].textContent
-                    header = this.removeSpecialChars(header);
-                    var body = specs.rows[i].cells[1].textContent
-                    body = this.removeSpecialChars(body);
-                    //console.log('header->' + header + ", body->" + body);
-                    var feature = header + ':' + body;
-                    features.push(feature);
-                }
-
-                let vlocal = {
-                    "COO": 'Thailand',
-                    "Status": 'Active',
-                    "MOQ": 1,
-                    "TAX": 12,
-                    "HSN": 9506,
-                    "MRP": mrp,
-                    "keyFeatures": features,
-                    "KEYWORDS": ldson.description,
-                    "MARKET": market
-                }
-                product.vlocal = vlocal;
-                fs.writeFileSync(this.destDir + '/productsv2/' + asin + '.json', JSON.stringify(product));
-                this.downloadImages(imagesDiv, asin);
-
-                //this.resizeImage(detination + '/' + '01.' + fileType,detination + '/' + '01-small.' + fileType);
-                //logger.debug(JSON.stringify(product));
             });
+
         } catch (e) {
             console.log('--------------' + e.message);
             this.failed.push(page);

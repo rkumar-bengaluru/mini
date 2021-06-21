@@ -1,7 +1,8 @@
 const MiNi = require('./lining');
+var fs = require('fs');
 
 const runMapping = async() => {
-    var src = 'lining/itr2/';
+    var src = 'lining/pages/';
     var dest = 'lining/catalog/';
     var mini = new MiNi(src,dest);
     mini.startConverting();
@@ -26,7 +27,7 @@ const createSuccessList = async() => {
     console.log(JSON.stringify(allformatted));
 }
 const createSiteMap = async() => {
-    var src = 'lining/itr2/';
+    var src = 'lining/itr1/';
     var dest = 'lining/catalog/';
     var mini = new MiNi(src,dest);
     var all = await mini.fetchFilesToConvert('lining/catalog/productsv2');
@@ -36,7 +37,21 @@ const createSiteMap = async() => {
         sitemap += '<url>' + '<loc>https://www.vlocalshop.in/product/' + e.split('.')[0] + '</loc></url>'; 
     })
     sitemap += '</all>';
-    console.log(sitemap);
+    fs.writeFileSync('lining/catalog/sitemap.xml', sitemap);
+}
+
+const convertJPG2Web = async() => {
+    var src = 'lining/itr1/';
+    var dest = 'lining/catalog/';
+    var mini = new MiNi(src,dest);
+    mini.convertJPG2Web();
+}
+
+const removeAllJPEG = async() => {
+    var src = 'lining/itr1/';
+    var dest = 'lining/catalog/';
+    var mini = new MiNi(src,dest);
+    mini.removeAllJPEG();
 }
 
 createSiteMap();
