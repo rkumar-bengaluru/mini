@@ -30,7 +30,7 @@ const searchSite = async () => {
     const indexedUrl = 'https://www.vlocalshop.in/sitemap.xml';
     var options = { url: indexedUrl, loadIndex: true };
     var mini = new MiNi(options);
-    var result = mini.search('apacs ziggler');
+    var result = mini.search('ignite');
     console.log(result);
 }
 
@@ -42,7 +42,7 @@ const runTestLoad = async () => {
 
 const updateImage = async () => {
     var mini = new MiNi();
-    await mini.updateFileWithImage('./vlocalshop/v.json');
+    await mini.updateFileWithImage('./vlocalshop/vlocalshop.json');
 };
 
 searchSite();

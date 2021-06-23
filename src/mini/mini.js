@@ -116,7 +116,7 @@ class MiNi {
             return;
         }
         let pagedownloaded = await this.fetchPage(this.allpages[this.curPageIndex].id);   // set new news item into the ticker
-        logger.debug('page load over...' + pagedownloaded);
+        logger.debug('this.curPageIndex = ' + this.curPageIndex + ", Of = " + this.allpages.length);
     }
 
     startIndexing = async () => {
@@ -227,9 +227,11 @@ class MiNi {
             var all = JSON.parse(data);
             all.forEach(function (p) {
                 if (p.id.includes('product/')) {
-                    var image = p.id.replace('product', 'catalog') + '/01-small.jpg';
+                    var tmp = p.id.split('/');
+                    var pid = tmp[tmp.length -1];
+                    var image = 'https://rkumar-bengaluru.github.io/vlocalshop.webp/catalog/' + pid + '/01.webp';
                     p.image = image;
-                    logger.debug('image ->' + image);
+                    //logger.debug('image ->' + image);
                 }
             })
             var updated = JSON.stringify(all);
