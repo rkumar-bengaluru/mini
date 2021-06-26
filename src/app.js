@@ -32,7 +32,7 @@ function renderMeta(ratings,review) {
     if(halfstar) {
         meta += '<img width=\'16\' height=\'15\' src=\"images/half-star.svg\" alt=\'five star ratings\' />';
     }
-    meta += ' Ratings - ' + ratings + ' - ' + review + 'reviews';
+    meta += ' Ratings - ' + ratings + ' - ' + review + ' reviews';
     meta += '</div>';
     meta += '</div>';
     meta += '</div>';
