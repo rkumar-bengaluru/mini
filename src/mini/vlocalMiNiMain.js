@@ -19,19 +19,17 @@ const startDataPrep = async () => {
 }
 
 const createSiteIndex = async () => {
-    const urltoindex = 'https://www.vlocalshop.in/sitemap.xml';
-    var options = { url: urltoindex };
+    var options = { root: './vlocalshop', loadIndex: false };
     var mini = new MiNi(options);
-    mini.createSiteIndex('vlocalshop');
+    mini.createSiteIndex();
 }
 
 const searchSite = async () => {
-    const indexedUrl = 'https://www.vlocalshop.in/sitemap.xml';
-    var options = { url: indexedUrl, loadIndex: true };
+    var options = { root: './vlocalshop', loadIndex: true };
     var mini = new MiNi(options);
     var result = mini.search('ignite');
     console.log(result);
 }
 
 
-startDataPrep();
+searchSite();

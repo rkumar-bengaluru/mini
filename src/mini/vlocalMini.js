@@ -24,7 +24,7 @@ class vlocalMiNi {
                 }
                 this.allpages = [];
                 this.curPageIndex = -1;
-                this.politePolicyInterval = 3000;// 5 seconds interval to load pages.
+                this.politePolicyInterval = 2000;// 5 seconds interval to load pages.
                 this.pbar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
                 this.productsFolder = this.siteFolder + this.fileSeparator + "pages";
                 this.allSitePages = this.siteFolder + this.fileSeparator + this.siteFolder + '.json';
@@ -110,9 +110,8 @@ class vlocalMiNi {
         setInterval(this.advanceProductDataCollection, this.politePolicyInterval);
     }
 
-    createSiteIndex(siteName) {
-        var siterawfile = siteName + '/' + siteName + '.json';
-        fs.readFile(siterawfile, (err, data) => {
+    createSiteIndex() {
+       fs.readFile(this.allSitePages, (err, data) => {
             if (err) {
                 console.log('error reading file - ' + fileName);
                 console.log(err.stack);
@@ -143,7 +142,7 @@ class vlocalMiNi {
     loadindex() {
         var data = fs.readFileSync(this.siteIdxFile);
         var idx = lunr.Index.load(JSON.parse(data));
-        this.allpages = JSON.parse(fs.readFileSync(this.sitemapFileName));
+        this.allpages = JSON.parse(fs.readFileSync(this.allSitePages));
 
         return idx;
     }

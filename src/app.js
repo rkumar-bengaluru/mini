@@ -66,7 +66,7 @@ function performsearch() {
             response += '<div class=\'column\'>';
             response += '<div class=\"mini-result-src\"><a target=\'_blank\'href=\'' + r.id + '\'>' + r.id + '</a></div>';
             response += '<a target=\'_blank\'href=\'' + r.id + '\'>' + '<div class=\"mini-result-title\">' + title + '</div></a>';
-            response += '<div class=\"mini-result-desc\">' + r.description + '</div>';
+            response += '<div class=\"mini-result-desc\">' + r.description.substring(0, 150) + '...' + '</div>';
             response += '<div class=\"mini-result-meta\"> '
             response += renderMeta(r.aggregateRating.ratingValue,r.aggregateRating.reviewCount);
             response += '</div>';
