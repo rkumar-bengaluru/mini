@@ -1,6 +1,8 @@
 import css from "./css/style.css";
 import MiNiWeb from './mini/miniweb';
 
+let current = 0;
+let totalNoOfPages = 0;
 let mini = new MiNiWeb();
 var mini_head = '<div class=\"row\">';
 mini_head += '<div class=\"column\"><a href=\'/mini\'><img src=\"images/mini.svg\" alt=\"Mini\" class=\"mini_logo_small\"></a></div>';
@@ -40,18 +42,27 @@ function renderMeta(ratings, review) {
     return meta;
 }
 
-function previousClicked(e) {
-    console.log(e.target);
-}
-
-function nextClicked(e) {
-    console.log(e.target);
-}
-
 function linkClicked(e) {
     e.preventDefault();
-    //console.log(e.target.textContent);
-    performsearch(e.target.textContent);
+    //console.log('current - ' + current + ', totalNoOfPages - ' + totalNoOfPages);
+    if (e.target.textContent === 'Previous') {
+        --current;
+        if (current > 0) {
+            performsearch(current);
+        }else {
+            ++current;
+        }
+    } else if (e.target.textContent === 'Next') {
+        ++current;
+        if (current < totalNoOfPages) {
+            performsearch(current);
+        } else {
+            --current;
+        }
+    } else {
+        performsearch(e.target.textContent);
+    }
+
     //console.log(e.target.tagName);
 }
 
@@ -109,21 +120,38 @@ function renderPagination(r, p) {
         }
         pages += '<nav aria-label=\"Page navigation pagination\">';
         pages += '<ul class=\"pagination justify-content-center\">';
-        pages += '<li class=\"page-item disabled\">';
-        pages += '<a class=\"page-link active\" onclick=\"previousClicked(e)\" tabindex="-1">Previous</a>';
+        if ((p - 1) > 0) {
+            ///console.log('previous enabled...');
+            pages += '<li class=\"page-item\">';
+        } else {
+            //console.log('previous diabled...');
+            pages += '<li class=\"page-item disabled\">';
+        }
+
+        pages += '<a class=\"page-link\" tabindex="-1">Previous</a>';
         pages += '</li>';
-       
-        for (let i = start; i <= ((start + range) - 1); i++) {
+
+        var endIdx = ((start + range) - 1);
+        if (endIdx > (r.noOfPage - 1)) {
+            endIdx = (r.noOfPage - 1);
+        }
+
+        for (let i = start; i <= endIdx; i++) {
             if (i === currentPage) {
                 pages += '<li class=\"page-item active\"><a class=\"page-link\" >' + i + '</a></li>';
             } else {
                 pages += '<li class=\"page-item\"><a class=\"page-link\" >' + i + '</a></li>';
             }
         }
-       
+
         ///
-        pages += '<li class=\"page-item disabled\">';
-        pages += '<a class=\"page-link active\" onclick=\"nextClicked(e)\">Next</a>';
+        if(p === r.noOfPage) {
+            pages += '<li class=\"page-item disabled\">';
+        } else {
+            pages += '<li class=\"page-item\">';
+        }
+        
+        pages += '<a class=\"page-link\" >Next</a>';
         pages += '</li>';
         pages += '</ul>';
         pages += '</nav>';
@@ -139,6 +167,7 @@ function renderPagination(r, p) {
 
 function performsearch(page) {
     document.getElementById('error').innerHTML = '';
+    current = page;
     var query = document.getElementById('mini-search-input').value;
     //console.log('query =' + query);
     if (query === '' || query.length === 0) {
@@ -150,6 +179,7 @@ function performsearch(page) {
     document.getElementById('mini-search-input').value = query;
     //console.log('search query...' + query);
     let result = mini.search(query, parseInt(page));
+    totalNoOfPages = result.noOfPage;
     //console.log('response size...' + result.length);
     var rtime = 'About ' + result.total + ' resuls in - ' + result.time + ' seconds...'
     //console.log('rtime->' + rtime);

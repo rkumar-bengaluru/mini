@@ -43,7 +43,7 @@ export default class MiNiWeb {
 
             var t2 = Math.round(Date.now());
             var diff = ((t2 - t1) / 1000).toFixed(3);
-            console.log('response length from mini -' + result.length + ',diff-' + diff);
+            //console.log('response length from mini -' + result.length + ',diff-' + diff);
             this.response.results = sliced;
             this.response.noOfPage = (result.length / this.pageSize).toFixed(0);
             this.response.status = 'success';
