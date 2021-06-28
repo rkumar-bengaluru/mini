@@ -8,6 +8,14 @@ export default class MiNiWeb {
     constructor() {
         this.idx = this.loadindex();
         this.allProducts = productMetaFile;
+        this.pageSize = 12;
+        this.response = {
+            'noOfPage': 0,
+            'results': [],
+            'status': 'fail',
+            'time': '',
+            'total': 0
+        };
         //console.log('loaded in browser');
     }
 
@@ -16,25 +24,34 @@ export default class MiNiWeb {
         return idx;
     }
 
-    search(query) {
+    search(query, page) {
         try {
-            var t1 = Math.round(Date.now() );
+            this.response.results = [];
+            this.response.noOfPage = 0;
+            this.response.status = 'fail';
+            this.response.time = 0;
+            this.response.total = 0;
+            var t1 = Math.round(Date.now());
             //console.log('query from mini -' + query);
             var result = this.idx.search(query);
             var response = result.map((item) => {
                 return this.allProducts.find((p) => item.ref === p.id)
             })
-            var best10 = [];
-            for (var i = 0; i < 10; i++)
-                best10.push(result[i]);
-            var t2 = Math.round(Date.now());
-            var diff = ((t2-t1)/1000).toFixed(3);
-            //console.log('response length from mini -' + result.length + ',diff-' + diff);
-            var response = { 'total': result.length, 'time': diff, 'bestCount': 10, 'best': response }
+            var startIndex = page * this.pageSize;
+            var endIndex = page * this.pageSize + this.pageSize;
+            var sliced = response.slice(startIndex, endIndex);
 
-            return response;
+            var t2 = Math.round(Date.now());
+            var diff = ((t2 - t1) / 1000).toFixed(3);
+            console.log('response length from mini -' + result.length + ',diff-' + diff);
+            this.response.results = sliced;
+            this.response.noOfPage = (result.length / this.pageSize).toFixed(0);
+            this.response.status = 'success';
+            this.response.time = diff;
+            this.response.total = result.length;
+            return this.response;
         } catch (e) {
-            //console.log(e.stack);
+            console.log(e.stack);
             throw e;
         }
     }

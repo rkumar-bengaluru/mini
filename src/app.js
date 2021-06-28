@@ -13,23 +13,23 @@ mini_head += ' </div></div></div>';
 mini_head += '</div>';
 mini_head += '<div id=\'mini-results-response-time\' class=\'mini-results-response-time\'></div>';
 
-function renderMeta(ratings,review) {
+function renderMeta(ratings, review) {
     var currentRating = parseFloat((ratings)).toFixed(1);
     var meta = '<div class=\"stars-wrapper stars mb-2\">';
     meta += '<div>';
     var noOfStars = Math.floor(currentRating);
     var decimal = currentRating - noOfStars;
     var halfstar = false;
-    if(decimal > 0)
+    if (decimal > 0)
         halfstar = true;
-    
+
     meta += '<div class=\"stars-wrapper stars-main\">';
     meta += '<div>';
     //console.log('star image change - src=\"images/mini.svg\"');
-    for(var i = 0; i < noOfStars;i++) {
+    for (var i = 0; i < noOfStars; i++) {
         meta += '<img width=\'16\' height=\'15\' src=\"images/star.svg\" alt=\'five star ratings\' />';
-    } 
-    if(halfstar) {
+    }
+    if (halfstar) {
         meta += '<img width=\'16\' height=\'15\' src=\"images/half-star.svg\" alt=\'five star ratings\' />';
     }
     meta += ' Ratings - ' + ratings + ' - ' + review + ' reviews';
@@ -40,7 +40,104 @@ function renderMeta(ratings,review) {
     return meta;
 }
 
-function performsearch() {
+function previousClicked(e) {
+    console.log(e.target);
+}
+
+function nextClicked(e) {
+    console.log(e.target);
+}
+
+function linkClicked(e) {
+    e.preventDefault();
+    //console.log(e.target.textContent);
+    performsearch(e.target.textContent);
+    //console.log(e.target.tagName);
+}
+
+function doPaging(current, total, r) {
+
+    let currentPage = current, // input
+        range = r,  // amount of links displayed 
+        totalPages = total, // determined by amount of items, hardcoded for readability 
+        start = 0;  // default
+
+    let paging = [];      // output variable
+
+    // Don't use negative values, force start at 1
+    if (currentPage < (range / 2) + 1) {
+        start = 1;
+
+        // Don't go beyond the last page 
+    } else if (currentPage >= (totalPages - (range / 2))) {
+        start = Math.floor(totalPages - range + 1);
+
+    } else {
+        start = (currentPage - Math.floor(range / 2));
+    }
+
+    for (let i = start; i <= ((start + range) - 1); i++) {
+        if (i === currentPage) {
+            paging.push(`[${i}]`); // add brackets to indicate current page 
+        } else {
+            paging.push(i.toString());
+        }
+    }
+    return paging;
+}
+
+function renderPagination(r, p) {
+    var pages = '';
+
+    if (r.noOfPage > 0) {
+        let currentPage = p, // input
+            range = 10,  // amount of links displayed 
+            totalPages = r.total, // determined by amount of items, hardcoded for readability 
+            start = 0;  // default
+
+
+        // Don't use negative values, force start at 1
+        if (currentPage < (range / 2) + 1) {
+            start = 0;
+
+            // Don't go beyond the last page 
+        } else if (currentPage >= (totalPages - (range / 2))) {
+            start = Math.floor(totalPages - range + 1);
+
+        } else {
+            start = (currentPage - Math.floor(range / 2));
+        }
+        pages += '<nav aria-label=\"Page navigation pagination\">';
+        pages += '<ul class=\"pagination justify-content-center\">';
+        pages += '<li class=\"page-item disabled\">';
+        pages += '<a class=\"page-link active\" onclick=\"previousClicked(e)\" tabindex="-1">Previous</a>';
+        pages += '</li>';
+       
+        for (let i = start; i <= ((start + range) - 1); i++) {
+            if (i === currentPage) {
+                pages += '<li class=\"page-item active\"><a class=\"page-link\" >' + i + '</a></li>';
+            } else {
+                pages += '<li class=\"page-item\"><a class=\"page-link\" >' + i + '</a></li>';
+            }
+        }
+       
+        ///
+        pages += '<li class=\"page-item disabled\">';
+        pages += '<a class=\"page-link active\" onclick=\"nextClicked(e)\">Next</a>';
+        pages += '</li>';
+        pages += '</ul>';
+        pages += '</nav>';
+    }
+    document.getElementById('pagination').innerHTML = pages;
+    var lii = document.getElementById('pagination').getElementsByTagName('li');
+    for (var i = 0; i < lii.length; i++) {
+        lii[i].addEventListener('click', (e) => {
+            linkClicked(e);
+        })
+    }
+}
+
+function performsearch(page) {
     document.getElementById('error').innerHTML = '';
     var query = document.getElementById('mini-search-input').value;
     //console.log('query =' + query);
@@ -52,13 +149,13 @@ function performsearch() {
 
     document.getElementById('mini-search-input').value = query;
     //console.log('search query...' + query);
-    let result = mini.search(query);
+    let result = mini.search(query, parseInt(page));
     //console.log('response size...' + result.length);
-    var rtime = 'About ' + result.total + ' resuls in ' + result.time + ' seconds,filtered best ' + result.bestCount + ' below...'
+    var rtime = 'About ' + result.total + ' resuls in - ' + result.time + ' seconds...'
     //console.log('rtime->' + rtime);
     document.getElementById('mini-results-response-time').innerHTML = rtime;
     var response = '';
-    result.best.forEach(function (r) {
+    result.results.forEach(function (r) {
         if (typeof r !== 'undefined') {
             var title = r.title.substring(0, 50) + '...';
             response += '<div class=\"mini-result-row\"><div class=\"row\">';
@@ -66,18 +163,21 @@ function performsearch() {
             response += '<div class=\'column\'>';
             response += '<div class=\"mini-result-src\"><a target=\'_blank\'href=\'' + r.id + '\'>' + r.id + '</a></div>';
             response += '<a target=\'_blank\'href=\'' + r.id + '\'>' + '<div class=\"mini-result-title\">' + title + '</div></a>';
-            if(r.description !== "") {
+            if (r.description !== "") {
                 response += '<div class=\"mini-result-desc\">' + r.description.substring(0, 150) + '...' + '</div>';
             } else {
                 response += '<div class=\"mini-result-desc\">' + r.description + '...' + '</div>';
             }
-            
+
             response += '<div class=\"mini-result-meta\"> '
-            response += renderMeta(r.aggregateRating.ratingValue,r.aggregateRating.reviewCount);
+            response += renderMeta(r.aggregateRating.ratingValue, r.aggregateRating.reviewCount);
             response += '</div>';
             response += '</div></div></div><br>';
         }
     });
+
+    renderPagination(result, parseInt(page));
+
     if (result.total === 0) {
         //console.log('no data' + result.total);
         document.getElementById('mini-results').innerHTML = '<span class=\"mini-error\">Sorry no results matching your criteria...</span>';
@@ -96,13 +196,13 @@ function init() {
             if (event.key === 'Enter') {
                 //console.log('enter clicked...');
                 event.preventDefault();
-                performsearch();
+                performsearch(0);
                 return;
             }
             document.getElementById('error').innerHTML = '';
         })
         document.getElementById('mini-btn-search').addEventListener('click', () => {
-            performsearch();
+            performsearch(0);
         })
     } catch (e) {
         //console.log(e.stack);
