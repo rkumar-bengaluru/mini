@@ -110,7 +110,6 @@ function renderPagination(r, p) {
         // Don't use negative values, force start at 1
         if (currentPage < (range / 2) + 1) {
             start = 0;
-
             // Don't go beyond the last page 
         } else if (currentPage >= (totalPages - (range / 2))) {
             start = Math.floor(totalPages - range + 1);
